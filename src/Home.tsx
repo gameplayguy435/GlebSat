@@ -1,8 +1,11 @@
+import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Video, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const HomePage = () => {
-  // Sample data for the graph
+  // Sample data and state
+  const [isStreaming, setIsStreaming] = React.useState(false);
   const data = [
     { time: '00:00', aqi: 45, temp: 22 },
     { time: '04:00', aqi: 48, temp: 21 },
@@ -12,28 +15,74 @@ const HomePage = () => {
     { time: '20:00', aqi: 47, temp: 22 },
   ];
 
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            GlebSat Environmental Monitoring
-          </h1>
-          <p className="text-xl mb-8">
-            Real-time atmospheric data collection and analysis for a better understanding of our environment
-          </p>
-          <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50">
-            View Live Data
-          </button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
+      {/* Video/Countdown Section */}
+      <motion.div 
+        initial="hidden"
+        animate="visible"
+        variants={fadeIn}
+        className="relative h-96 bg-slate-800"
+      >
+        {isStreaming ? (
+          <div className="h-full w-full bg-slate-700 flex items-center justify-center">
+            <Video className="w-16 h-16 text-blue-400" />
+            <span className="ml-2 text-xl">Live Stream Starting Soon...</span>
+          </div>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center space-y-4">
+            <Clock className="w-16 h-16 text-blue-400 animate-pulse" />
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-2">Next Transmission</h2>
+              <div className="text-4xl font-mono">12:34:56</div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Metrics Grid */}
+      <div className="max-w-7xl mx-auto px-4 py-12 grid md:grid-cols-3 gap-8">
+        <motion.div 
+          variants={fadeIn}
+          className="bg-slate-700 p-6 rounded-xl transition-all hover:scale-105"
+        >
+          <h3 className="text-xl font-bold mb-4">Air Quality Index</h3>
+          <div className="text-4xl font-bold text-green-400">45 AQI</div>
+          <div className="mt-2 text-sm text-slate-300">Good - Updated 2 mins ago</div>
+        </motion.div>
+
+        <motion.div 
+          variants={fadeIn}
+          className="bg-slate-700 p-6 rounded-xl transition-all hover:scale-105"
+        >
+          <h3 className="text-xl font-bold mb-4">Temperature</h3>
+          <div className="text-4xl font-bold text-blue-400">22°C</div>
+          <div className="mt-2 text-sm text-slate-300">Surface Level - ±0.5°C accuracy</div>
+        </motion.div>
+
+        <motion.div 
+          variants={fadeIn}
+          className="bg-slate-700 p-6 rounded-xl transition-all hover:scale-105"
+        >
+          <h3 className="text-xl font-bold mb-4">CO² Levels</h3>
+          <div className="text-4xl font-bold text-purple-400">412ppm</div>
+          <div className="mt-2 text-sm text-slate-300">Stable - 0.8% increase</div>
+        </motion.div>
       </div>
 
-      {/* Real-time Data Section */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-3xl font-bold mb-8">Live Satellite Data</h2>
-        <div className="bg-white p-6 rounded-lg shadow-lg mb-12">
-          <div className="h-[400px]">
+      {/* Analytics Chart */}
+      <motion.div 
+        variants={fadeIn}
+        className="max-w-7xl mx-auto px-4 pb-12"
+      >
+        <div className="bg-slate-700 p-6 rounded-xl">
+          <h3 className="text-xl font-bold mb-6">24-Hour Trend Analysis</h3>
+          <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -46,39 +95,29 @@ const HomePage = () => {
             </ResponsiveContainer>
           </div>
         </div>
+      </motion.div>
 
-        {/* Quick Links Section */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-bold mb-4">Latest Documentation</h3>
-            <p className="text-gray-600 mb-4">
-              Access technical specifications and project methodology
-            </p>
-            <a href="/documentation" className="text-blue-600 flex items-center">
-              Learn More <ArrowRight className="ml-2" size={16} />
-            </a>
-          </div>
 
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-bold mb-4">Recent Updates</h3>
-            <p className="text-gray-600 mb-4">
-              Stay informed about our latest developments and findings
+      {/* Page Previews */}
+      <div className="max-w-7xl mx-auto px-4 pb-12 grid md:grid-cols-3 gap-8">
+        {['Documentation', 'News', 'Gallery'].map((page) => (
+          <motion.div
+            key={page}
+            whileHover={{ y: -5 }}
+            className="bg-slate-700 p-6 rounded-xl cursor-pointer"
+          >
+            <h3 className="text-xl font-bold mb-4">{page}</h3>
+            <p className="text-slate-300 mb-4">
+              {page === 'Documentation' && 'Technical specifications and mission details'}
+              {page === 'News' && 'Latest updates and mission progress'}
+              {page === 'Gallery' && 'Visual journey through our mission'}
             </p>
-            <a href="/news" className="text-blue-600 flex items-center">
-              View Updates <ArrowRight className="ml-2" size={16} />
-            </a>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-bold mb-4">Image Gallery</h3>
-            <p className="text-gray-600 mb-4">
-              Explore our visual documentation and mission images
-            </p>
-            <a href="/gallery" className="text-blue-600 flex items-center">
-              View Gallery <ArrowRight className="ml-2" size={16} />
-            </a>
-          </div>
-        </div>
+            <div className="flex items-center text-blue-400">
+              <ArrowRight className="mr-2" />
+              <span>Explore {page}</span>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
