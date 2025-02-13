@@ -12,6 +12,33 @@ const Navigation = () => {
     setIsMenuOpen(false);
   }, [location]);
 
+  const navLinks = [
+    { path: '/', name: 'Home', icon: Home },
+    { path: '/documentation', name: 'Documentation', icon: FileText },
+    { path: '/about', name: 'About Us', icon: Users },
+    { path: '/contact', name: 'Contact', icon: Mail },
+    { path: '/news', name: 'News', icon: Newspaper },
+    { path: '/gallery', name: 'Gallery', icon: Image },
+  ];
+
+  const linkVariants = {
+    hover: { scale: 1.05, originX: 0 },
+    tap: { scale: 0.95 }
+  };
+
+  const mobileMenuVariants = {
+    open: { 
+      opacity: 1,
+      height: "auto",
+      transition: { duration: 0.3 }
+    },
+    closed: { 
+      opacity: 0,
+      height: 0,
+      transition: { duration: 0.3 }
+    }
+  };
+
   return (
     <nav className="bg-slate-900/95 backdrop-blur-md border-b border-slate-700 fixed w-full z-50 text-slate-300">
       <div className="max-w-7xl mx-auto px-4">
@@ -23,30 +50,26 @@ const Navigation = () => {
           
           <div className="hidden md:block">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-slate-700 hover:text-slate-100">
-                <Home size={18} />
-                <span>Home</span>
-              </Link>
-              <Link to="/documentation" className="flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-slate-700 hover:text-slate-100">
-                <FileText size={18} />
-                <span>Documentation</span>
-              </Link>
-              <Link to="/about" className="flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-slate-700 hover:text-slate-100">
-                <Users size={18} />
-                <span>About Us</span>
-              </Link>
-              <Link to="/contact" className="flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-slate-700 hover:text-slate-100">
-                <Mail size={18} />
-                <span>Contact</span>
-              </Link>
-              <Link to="/news" className="flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-slate-700 hover:text-slate-100">
-                <Newspaper size={18} />
-                <span>News</span>
-              </Link>
-              <Link to="/gallery" className="flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-slate-700 hover:text-slate-100">
-                <Image size={18} />
-                <span>Gallery</span>
-              </Link>
+              {navLinks.map((link) => (
+                <motion.div
+                  key={link.path}
+                  whileHover="hover"
+                  whileTap="tap"
+                  variants={linkVariants}
+                >
+                  <Link
+                    to={link.path}
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md ${
+                      location.pathname === link.path 
+                        ? 'bg-slate-700 text-slate-100' 
+                        : 'hover:bg-slate-800'
+                    }`}
+                  >
+                    <link.icon size={18} />
+                    <span>{link.name}</span>
+                  </Link>
+                </motion.div>
+              ))}
             </div>
           </div>
           
@@ -59,31 +82,34 @@ const Navigation = () => {
           </button>
         </div>
 
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden py-4 space-y-2"
-          >
-            {[
-              { path: '/', name: 'Home', icon: Home },
-              { path: '/documentation', name: 'Documentation', icon: FileText },
-              { path: '/about', name: 'About Us', icon: Users },
-              { path: '/contact', name: 'Contact', icon: Mail },
-              { path: '/news', name: 'News', icon: Newspaper },
-              { path: '/gallery', name: 'Gallery', icon: Image },
-            ].map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-slate-100"
+        <motion.div
+          initial="closed"
+          animate={isMenuOpen ? "open" : "closed"}
+          variants={mobileMenuVariants}
+          className="md:hidden overflow-hidden"
+        >
+          <div className="py-4 space-y-2">
+            {navLinks.map((link) => (
+              <motion.div
+                key={link.path}
+                whileHover={{ x: 5 }}
+                className="px-4"
               >
-                <item.icon size={20} />
-                <span>{item.name}</span>
-              </Link>
+                <Link
+                  to={link.path}
+                  className={`flex items-center space-x-3 py-3 rounded-lg ${
+                    location.pathname === link.path 
+                      ? 'bg-slate-700 text-slate-100' 
+                      : 'hover:bg-slate-800'
+                  }`}
+                >
+                  <link.icon size={20} />
+                  <span>{link.name}</span>
+                </Link>
+              </motion.div>
             ))}
-          </motion.div>
-        )}
+          </div>
+        </motion.div>
       </div>
     </nav>
   );
