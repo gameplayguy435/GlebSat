@@ -48,7 +48,7 @@ const Navigation = () => {
             <div className="text-xl font-bold text-slate-100">GlebSat</div>
           </div>
           
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <div className="flex items-center space-x-4">
               {navLinks.map((link) => (
                 <motion.div
@@ -76,7 +76,7 @@ const Navigation = () => {
           <button 
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition-colors"
+            className="lg:hidden p-2 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition-colors"
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -86,7 +86,7 @@ const Navigation = () => {
           initial="closed"
           animate={isMenuOpen ? "open" : "closed"}
           variants={mobileMenuVariants}
-          className="md:hidden overflow-hidden"
+          className="lg:hidden overflow-hidden"
         >
           <div className="py-4 space-y-2">
             {navLinks.map((link) => (
