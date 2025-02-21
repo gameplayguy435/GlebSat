@@ -1,5 +1,6 @@
 import React from 'react';
 import { Mail, Phone, MapPin, MessageCircle, Share2, Code, Image } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const ContactsPage = () => {
   const socialLinks = [
@@ -9,14 +10,30 @@ const ContactsPage = () => {
     { icon: <Image size={24} />, name: 'Media', url: '#', color: 'bg-pink-600' }
   ];
 
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-slate-200 py-12">
       <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-4xl font-bold mb-12">Contact Us</h1>
+        <motion.h1
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          className="text-4xl font-bold mb-12 text-slate-100"
+        >
+          Contact Us
+        </motion.h1>
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Contact Information */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-slate-700 rounded-xl shadow-xl p-8"
+          >
             <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
             
             <div className="space-y-4">
@@ -61,10 +78,14 @@ const ContactsPage = () => {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Contact Form */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-slate-700 rounded-xl shadow-xl p-8"
+          >
             <h2 className="text-2xl font-bold mb-6">Send us a Message</h2>
             <form className="space-y-4">
               <div>
@@ -101,7 +122,7 @@ const ContactsPage = () => {
                 Send Message
               </button>
             </form>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

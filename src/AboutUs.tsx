@@ -1,5 +1,10 @@
-import React from 'react';
+import { motion } from 'framer-motion';
 import { LucideGithub, Linkedin, Mail } from 'lucide-react';
+
+const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
 
 const AboutUsPage = () => {
   const teamMembers = [
@@ -27,49 +32,68 @@ const AboutUsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-slate-200 py-12">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Video Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold mb-8">Project Overview</h2>
-          <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden">
-            <div className="w-full h-full flex items-center justify-center bg-gray-800 text-white">
-              Project Presentation Video
+        {/* Project Overview */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <h2 className="text-4xl font-bold mb-8 text-slate-100">Project Overview</h2>
+          <div className="aspect-w-16 aspect-h-9 bg-slate-700 rounded-xl overflow-hidden">
+            <div className="w-full h-full flex items-center justify-center bg-slate-800/50">
+              <span className="text-xl">Project Presentation Video</span>
             </div>
           </div>
-        </div>
-
+        </motion.div>
+        
         {/* Team Section */}
-        <div>
-          <h2 className="text-3xl font-bold mb-8">Our Team</h2>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-4xl font-bold mb-8 text-slate-100">Our Team</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <img 
-                  src={member.image} 
-                  alt={member.name} 
-                  className="w-full h-48 object-cover"
-                />
+              <motion.div
+                key={index}
+                whileHover={{ y: -5 }}
+                className="bg-slate-700 rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all"
+              >
+                <div className="h-48 bg-slate-800/50">
+                  <img 
+                    src={member.image} 
+                    alt={member.name} 
+                    className="w-full h-48 object-cover"
+                  />
+                </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2">{member.name}</h3>
-                  <p className="text-blue-600 mb-3">{member.role}</p>
-                  <p className="text-gray-600 mb-4">{member.description}</p>
+                  <h3 className="text-xl font-bold mb-2 text-slate-100">{member.name}</h3>
+                  <p className="text-blue-400 mb-3">{member.role}</p>
+                  <p className="text-slate-300 mb-4">{member.description}</p>
                   <div className="flex space-x-4">
-                    <a href={member.links.github} className="text-gray-600 hover:text-gray-900">
-                      <LucideGithub size={20} />
-                    </a>
-                    <a href={member.links.linkedin} className="text-gray-600 hover:text-gray-900">
-                      <Linkedin size={20} />
-                    </a>
-                    <a href={member.links.email} className="text-gray-600 hover:text-gray-900">
-                      <Mail size={20} />
-                    </a>
+                    {Object.entries(member.links).map(([key, url]) => (
+                      <a
+                        key={key}
+                        href={url}
+                        className="text-slate-400 hover:text-blue-400 transition-colors"
+                      >
+                        {key === 'github' && <LucideGithub size={20} />}
+                        {key === 'linkedin' && <Linkedin size={20} />}
+                        {key === 'email' && <Mail size={20} />}
+                      </a>
+                    ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

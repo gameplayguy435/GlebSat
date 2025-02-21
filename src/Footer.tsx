@@ -12,7 +12,7 @@ const Footer = () => {
               <span className="text-xl font-bold">GlebSat</span>
             </div>
             <p className="text-sm">
-              Pioneering atmospheric research through microsatellite technology
+              A lata que desafia limites
             </p>
           </div>
 
