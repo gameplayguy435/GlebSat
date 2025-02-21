@@ -48,7 +48,7 @@ const Navigation = () => {
             <div className="text-xl font-bold">GlebSat</div>
           </div>
           
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <div className="flex items-center space-x-4">
               {navLinks.map((link) => (
                 <motion.div
