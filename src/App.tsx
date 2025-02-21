@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { keepTheme } from './assets/theme/AppTheme';
 import AboutUsPage from "./AboutUs";
 import ContactsPage from "./Contacts";
 import DocumentationPage from "./Documentation";
@@ -7,14 +9,18 @@ import HomePage from "./Home";
 import Navigation from "./Navigation";
 import NewsPage from "./News";
 import Footer from "./Footer";
-import "./App.css";
+import "./assets/styles/App.css";
+
 
 function App() {
+	useEffect(() => {
+		keepTheme();
+	});
 	return (
 		<Router>
 			<div className="flex flex-col min-h-screen">
 				<Navigation />
-				<main className="flex-grow">
+				<main className="flex-grow pt-32">
 					<Routes>
 						<Route path="/" element={<HomePage />} />
 						<Route path="/documentation" element={<DocumentationPage />} />

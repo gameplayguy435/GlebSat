@@ -3,7 +3,7 @@ import { Satellite, Github, Twitter, Mail } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-900 text-slate-300 border-t border-slate-700">
+    <footer className="border-t">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           <div className="space-y-4">
@@ -52,12 +52,12 @@ const Footer = () => {
               <Twitter className="hover:text-blue-400 cursor-pointer" />
               <Mail className="hover:text-blue-400 cursor-pointer" />
             </div>
-            <div className="pt-4 border-t border-slate-700">
-              <p className="text-sm">© 2025 GlebSat. All rights reserved</p>
-            </div>
           </div>
         </div>
       </div>
+        <div className="mx-4 p-4 border-t flex justify-center">
+          <p className="text-sm">© 2025 GlebSat. All rights reserved</p>
+        </div>
     </footer>
   );
 };

@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Dark/Light Theme */
+.theme-dark {
+  --background-primary: #05070a;
+  --background-secondary: #1e293b;
+  --background-tertiary: #333b4d;
+  --text-primary: #f9f3f4; 
+  --text-secondary: #cad5e2;
+  --text-disabled: #64748B; /* NOT IN USE */
+  --border-main: #334155;
+}
+.theme-light {
+  --background-primary: #fcfcfc;
+  --background-secondary: #c1cadf;
+  --background-tertiary: #9ba3ba;
+  --text-primary: #0b0e14; 
+  --text-secondary: #47536b;
+  --text-disabled: #64748B; /* NOT IN USE */
+  --border-main: #334155;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: 200ms;
+}
+
+/* Global */
+body {
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+}
+
+/* Navigation Bar */
+nav {
+  border-bottom: 1px solid var(--border-main);
+  /* background-color: rgba(5, 7, 10, 0.8); */
+  background-color: rgb(from var(--background-primary) r g b / 0.6);
+  color: var(--text-primary);
+}
+nav a {
+  color: var(--text-secondary);
+}
+nav a:active {
+  background-color: rgb(from var(--background-secondary) r g b / 0.6);
+  color: var(--text-primary);
+}
+nav a:hover {
+  background-color: rgb(from var(--background-tertiary) r g b / 0.6) !important;
+  color: var(--text-primary);
+}

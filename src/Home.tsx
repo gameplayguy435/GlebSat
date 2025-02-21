@@ -21,16 +21,16 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
+    <div className="min-h-screen">
       {/* Video/Countdown Section */}
       <motion.div 
         initial="hidden"
         animate="visible"
         variants={fadeIn}
-        className="relative h-96 bg-slate-800"
+        className="relative h-96"
       >
         {isStreaming ? (
-          <div className="h-full w-full bg-slate-700 flex items-center justify-center">
+          <div className="h-full w-full flex items-center justify-center">
             <Video className="w-16 h-16 text-blue-400" />
             <span className="ml-2 text-xl">Live Stream Starting Soon...</span>
           </div>
@@ -49,29 +49,29 @@ const HomePage = () => {
       <div className="max-w-7xl mx-auto px-4 py-12 grid md:grid-cols-3 gap-8">
         <motion.div 
           variants={fadeIn}
-          className="bg-slate-700 p-6 rounded-xl transition-all hover:scale-105"
+          className="p-6 rounded-xl transition-all hover:scale-105"
         >
           <h3 className="text-xl font-bold mb-4">Air Quality Index</h3>
           <div className="text-4xl font-bold text-green-400">45 AQI</div>
-          <div className="mt-2 text-sm text-slate-300">Good - Updated 2 mins ago</div>
+          <div className="mt-2 text-sm">Good - Updated 2 mins ago</div>
         </motion.div>
 
         <motion.div 
           variants={fadeIn}
-          className="bg-slate-700 p-6 rounded-xl transition-all hover:scale-105"
+          className="p-6 rounded-xl transition-all hover:scale-105"
         >
           <h3 className="text-xl font-bold mb-4">Temperature</h3>
           <div className="text-4xl font-bold text-blue-400">22°C</div>
-          <div className="mt-2 text-sm text-slate-300">Surface Level - ±0.5°C accuracy</div>
+          <div className="mt-2 text-sm">Surface Level - ±0.5°C accuracy</div>
         </motion.div>
 
         <motion.div 
           variants={fadeIn}
-          className="bg-slate-700 p-6 rounded-xl transition-all hover:scale-105"
+          className="p-6 rounded-xl transition-all hover:scale-105"
         >
           <h3 className="text-xl font-bold mb-4">CO² Levels</h3>
           <div className="text-4xl font-bold text-purple-400">412ppm</div>
-          <div className="mt-2 text-sm text-slate-300">Stable - 0.8% increase</div>
+          <div className="mt-2 text-sm">Stable - 0.8% increase</div>
         </motion.div>
       </div>
 
@@ -80,7 +80,7 @@ const HomePage = () => {
         variants={fadeIn}
         className="max-w-7xl mx-auto px-4 pb-12"
       >
-        <div className="bg-slate-700 p-6 rounded-xl">
+        <div className="p-6 rounded-xl">
           <h3 className="text-xl font-bold mb-6">24-Hour Trend Analysis</h3>
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
@@ -104,10 +104,10 @@ const HomePage = () => {
           <motion.div
             key={page}
             whileHover={{ y: -5 }}
-            className="bg-slate-700 p-6 rounded-xl cursor-pointer"
+            className="p-6 rounded-xl cursor-pointer"
           >
             <h3 className="text-xl font-bold mb-4">{page}</h3>
-            <p className="text-slate-300 mb-4">
+            <p className="mb-4">
               {page === 'Documentation' && 'Technical specifications and mission details'}
               {page === 'News' && 'Latest updates and mission progress'}
               {page === 'Gallery' && 'Visual journey through our mission'}
