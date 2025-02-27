@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 import { keepTheme } from './assets/theme/AppTheme';
 import AboutUsPage from "./AboutUs";
 import ContactsPage from "./Contacts";
-import DocumentationPage from "./Documentation";
+// import DocumentationPage from "./Documentation"; Probably not needed
 import GalleryPage from "./Gallery";
 import HomePage from "./Home";
 import Navigation from "./Navigation";
@@ -15,7 +17,13 @@ import "./assets/styles/App.css";
 function App() {
 	useEffect(() => {
 		keepTheme();
-	});
+		AOS.init({
+			delay: 300,
+			duration: 800,
+			easing: 'ease-in-out',
+			anchorPlacement: 'top-bottom',
+		});
+	}, []);
 	return (
 		<Router>
 			<div className="flex flex-col min-h-screen">
@@ -23,7 +31,7 @@ function App() {
 				<main className="flex-grow pt-32">
 					<Routes>
 						<Route path="/" element={<HomePage />} />
-						<Route path="/documentation" element={<DocumentationPage />} />
+						{/* <Route path="/documentation" element={<DocumentationPage />} /> */}
 						<Route path="/about" element={<AboutUsPage />} />
 						<Route path="/news" element={<NewsPage />} />
 						<Route path="/gallery" element={<GalleryPage />} />

@@ -15,27 +15,17 @@ const HomePage = () => {
     { time: '20:00', aqi: 47, temp: 22 },
   ];
 
-  const fadeIn = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 }
-  };
-
   return (
-    <div className="min-h-screen">
+    <div>
       {/* Video/Countdown Section */}
-      <motion.div 
-        initial="hidden"
-        animate="visible"
-        variants={fadeIn}
-        className="relative h-96"
-      >
+      <div className="relative h-96">
         {isStreaming ? (
-          <div className="h-full w-full flex items-center justify-center">
+          <div className="h-full w-full flex items-center justify-center" data-aos="fade-up">
             <Video className="w-16 h-16 text-blue-400" />
             <span className="ml-2 text-xl">Live Stream Starting Soon...</span>
           </div>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center space-y-4">
+          <div className="h-full flex flex-col items-center justify-center space-y-4" data-aos="fade-up">
             <Clock className="w-16 h-16 text-blue-400 animate-pulse" />
             <div className="text-center">
               <h2 className="text-3xl font-bold mb-2">Next Transmission</h2>
@@ -43,44 +33,47 @@ const HomePage = () => {
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Metrics Grid */}
       <div className="max-w-7xl mx-auto px-4 py-12 grid md:grid-cols-3 gap-8">
-        <motion.div 
-          variants={fadeIn}
-          className="p-6 rounded-xl transition-all hover:scale-105"
-        >
-          <h3 className="text-xl font-bold mb-4">Air Quality Index</h3>
-          <div className="text-4xl font-bold text-green-400">45 AQI</div>
-          <div className="mt-2 text-sm">Good - Updated 2 mins ago</div>
-        </motion.div>
+        <div data-aos="fade-up">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="p-6 rounded-xl transition-all bg-secondary shadow-xl"
+          >
+            <h3 className="text-xl font-bold mb-4">Air Quality Index</h3>
+            <div className="text-4xl font-bold text-green-400">45 AQI</div>
+            <div className="mt-2 text-sm">Good - Updated 2 mins ago</div>
+          </motion.div>
+        </div>
 
-        <motion.div 
-          variants={fadeIn}
-          className="p-6 rounded-xl transition-all hover:scale-105"
-        >
-          <h3 className="text-xl font-bold mb-4">Temperature</h3>
-          <div className="text-4xl font-bold text-blue-400">22°C</div>
-          <div className="mt-2 text-sm">Surface Level - ±0.5°C accuracy</div>
-        </motion.div>
+        <div data-aos="fade-up">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="p-6 rounded-xl transition-all bg-secondary shadow-xl"
+          >
+            <h3 className="text-xl font-bold mb-4">Temperature</h3>
+            <div className="text-4xl font-bold text-blue-400">22°C</div>
+            <div className="mt-2 text-sm">Surface Level - ±0.5°C accuracy</div>
+          </motion.div>
+        </div>
 
-        <motion.div 
-          variants={fadeIn}
-          className="p-6 rounded-xl transition-all hover:scale-105"
-        >
-          <h3 className="text-xl font-bold mb-4">CO² Levels</h3>
-          <div className="text-4xl font-bold text-purple-400">412ppm</div>
-          <div className="mt-2 text-sm">Stable - 0.8% increase</div>
-        </motion.div>
+        <div data-aos="fade-up">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="p-6 rounded-xl transition-all bg-secondary shadow-xl"
+          >
+            <h3 className="text-xl font-bold mb-4">CO² Levels</h3>
+            <div className="text-4xl font-bold text-purple-400">412ppm</div>
+            <div className="mt-2 text-sm">Stable - 0.8% increase</div>
+          </motion.div>
+        </div>
       </div>
 
       {/* Analytics Chart */}
-      <motion.div 
-        variants={fadeIn}
-        className="max-w-7xl mx-auto px-4 pb-12"
-      >
-        <div className="p-6 rounded-xl">
+      <div className="max-w-7xl mx-auto px-4 pb-12">
+        <div className="p-6 rounded-xl bg-secondary shadow-xl" data-aos="fade-up">
           <h3 className="text-xl font-bold mb-6">24-Hour Trend Analysis</h3>
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
@@ -95,28 +88,29 @@ const HomePage = () => {
             </ResponsiveContainer>
           </div>
         </div>
-      </motion.div>
+      </div>
 
 
       {/* Page Previews */}
       <div className="max-w-7xl mx-auto px-4 pb-12 grid md:grid-cols-3 gap-8">
         {['Documentation', 'News', 'Gallery'].map((page) => (
-          <motion.div
-            key={page}
-            whileHover={{ y: -5 }}
-            className="p-6 rounded-xl cursor-pointer"
-          >
-            <h3 className="text-xl font-bold mb-4">{page}</h3>
-            <p className="mb-4">
-              {page === 'Documentation' && 'Technical specifications and mission details'}
-              {page === 'News' && 'Latest updates and mission progress'}
-              {page === 'Gallery' && 'Visual journey through our mission'}
-            </p>
-            <div className="flex items-center text-blue-400">
-              <ArrowRight className="mr-2" />
-              <span>Explore {page}</span>
-            </div>
-          </motion.div>
+          <div key={page} data-aos="fade-up">
+            <motion.div
+              whileHover={{ y: -5 }}
+              className="p-6 rounded-xl cursor-pointer bg-secondary shadow-xl hover:shadow-2xl"
+            >
+              <h3 className="text-xl font-bold mb-4">{page}</h3>
+              <p className="mb-4">
+                {page === 'Documentation' && 'Technical specifications and mission details'}
+                {page === 'News' && 'Latest updates and mission progress'}
+                {page === 'Gallery' && 'Visual journey through our mission'}
+              </p>
+              <div className="flex items-center text-blue-400">
+                <ArrowRight className="mr-2" />
+                <span>Explore {page}</span>
+              </div>
+            </motion.div>
+          </div>
         ))}
       </div>
     </div>

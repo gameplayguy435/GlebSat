@@ -10,30 +10,16 @@ const ContactsPage = () => {
     { icon: <Image size={24} />, name: 'Media', url: '#', color: 'bg-pink-600' }
   ];
 
-  const fadeIn = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-slate-200 py-12">
+    <div className="py-12">
       <div className="max-w-7xl mx-auto px-4">
-        <motion.h1
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-          className="text-4xl font-bold mb-12 text-slate-100"
-        >
+        <h1 className="text-4xl font-bold mb-12" data-aos="fade-up">
           Contact Us
-        </motion.h1>
+        </h1>
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Contact Information */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-slate-700 rounded-xl shadow-xl p-8"
-          >
+          <div className="rounded-xl shadow-xl p-8 bg-secondary" data-aos="fade-up">
             <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
             
             <div className="space-y-4">
@@ -41,7 +27,7 @@ const ContactsPage = () => {
                 <Mail className="text-blue-600" size={24} />
                 <div>
                   <h3 className="font-semibold">Email</h3>
-                  <p className="text-gray-600">contact@microsatproject.com</p>
+                  <p className="color-secondary">contact@microsatproject.com</p>
                 </div>
               </div>
 
@@ -49,7 +35,7 @@ const ContactsPage = () => {
                 <Phone className="text-blue-600" size={24} />
                 <div>
                   <h3 className="font-semibold">Phone</h3>
-                  <p className="text-gray-600">+1 (555) 123-4567</p>
+                  <p className="color-secondary">+1 (555) 123-4567</p>
                 </div>
               </div>
 
@@ -57,7 +43,7 @@ const ContactsPage = () => {
                 <MapPin className="text-blue-600" size={24} />
                 <div>
                   <h3 className="font-semibold">Location</h3>
-                  <p className="text-gray-600">Research Center, Innovation Street</p>
+                  <p className="color-secondary">Research Center, Innovation Street</p>
                 </div>
               </div>
             </div>
@@ -67,62 +53,59 @@ const ContactsPage = () => {
               <h3 className="text-xl font-bold mb-4">Connect With Us</h3>
               <div className="grid grid-cols-2 gap-4">
                 {socialLinks.map((link, index) => (
-                  <a
+                  <motion.a
                     key={index}
                     href={link.url}
-                    className={`${link.color} text-white rounded-lg p-4 flex items-center space-x-3 hover:opacity-90 transition-opacity`}
+                    whileHover={{ opacity: 0.8 }}
+                    className={`${link.color} text-white rounded-lg p-4 flex items-center space-x-3`}
                   >
                     {link.icon}
                     <span>{link.name}</span>
-                  </a>
+                  </motion.a>
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Contact Form */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-slate-700 rounded-xl shadow-xl p-8"
-          >
+          <div className="rounded-xl shadow-xl p-8 bg-secondary" data-aos="fade-up">
             <h2 className="text-2xl font-bold mb-6">Send us a Message</h2>
             <form className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium color-secondary mb-1">
                   Name
                 </label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-3 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium color-secondary mb-1">
                   Email
                 </label>
                 <input
                   type="email"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-3 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium color-secondary mb-1">
                   Message
                 </label>
                 <textarea
                   rows={4}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-3 focus:ring-blue-500"
                 ></textarea>
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-500 transition-colors"
               >
                 Send Message
               </button>
             </form>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

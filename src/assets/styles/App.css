@@ -12,8 +12,8 @@
 }
 .theme-light {
   --background-primary: #fcfcfc;
-  --background-secondary: #c1cadf;
-  --background-tertiary: #9ba3ba;
+  --background-secondary: #dadee7;
+  --background-tertiary: #c1cadf;
   --text-primary: #0b0e14; 
   --text-secondary: #47536b;
   --text-disabled: #64748B; /* NOT IN USE */
@@ -23,7 +23,7 @@
 /* Smooth transitions */
 * {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-duration: 200ms;
+  transition-duration: 150ms;
 }
 
 /* Global */
@@ -49,4 +49,18 @@ nav a:active {
 nav a:hover {
   background-color: rgb(from var(--background-tertiary) r g b / 0.6) !important;
   color: var(--text-primary);
+}
+
+/* Page Content */
+.bg-secondary {
+  background-color: var(--background-secondary);
+}
+.bg-tertiary {
+  background-color: var(--background-tertiary);
+}
+.color-primary {
+  color: var(--text-primary);
+}
+.color-secondary {
+  color: var(--text-secondary);
 }
