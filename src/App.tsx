@@ -3,15 +3,21 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { keepTheme } from './assets/theme/AppTheme';
+import "./assets/styles/App.css";
+import FrontLayout from './FrontLayout';
 import AboutUsPage from "./AboutUs";
 import ContactsPage from "./Contacts";
 // import DocumentationPage from "./Documentation"; Probably not needed
 import GalleryPage from "./Gallery";
 import HomePage from "./Home";
-import Navigation from "./Navigation";
 import NewsPage from "./News";
-import Footer from "./Footer";
-import "./assets/styles/App.css";
+// Back-End Dashboard
+import Dashboard from './Admin/Dashboard';
+import SignIn from './Admin/authentication/SignIn';
+import SignUp from './Admin/authentication/SignUp';
+import MainGrid from './Admin/components/MainGrid';
+import News from './Admin/News';
+import Authorization from './Admin/Authorization';
 
 
 function App() {
@@ -26,20 +32,26 @@ function App() {
 	}, []);
 	return (
 		<Router>
-			<div className="flex flex-col min-h-screen">
-				<Navigation />
-				<main className="flex-grow pt-32">
-					<Routes>
-						<Route path="/" element={<HomePage />} />
-						{/* <Route path="/documentation" element={<DocumentationPage />} /> */}
-						<Route path="/about" element={<AboutUsPage />} />
-						<Route path="/news" element={<NewsPage />} />
-						<Route path="/gallery" element={<GalleryPage />} />
-						<Route path="/contact" element={<ContactsPage />} />
-					</Routes>
-				</main>
-				<Footer />
-			</div>
+			<Routes>
+				{/* Admin/Back-End Routes */}
+				<Route path="/admin/login" element={<SignIn />} />
+				<Route path="/admin/signup" element={<SignUp />} />
+				<Route path="/admin" element={<Authorization />}>
+					<Route path="" element={<Dashboard />}>
+						<Route path="" element={<MainGrid />} />
+						<Route path="news" element={<News />} />
+					</Route>
+				</Route>
+				
+				{/* Front-End Routes */}
+				<Route element={<FrontLayout />}>
+					<Route path="/" element={<HomePage />} />
+					<Route path="/about" element={<AboutUsPage />} />
+					<Route path="/news" element={<NewsPage />} />
+					<Route path="/gallery" element={<GalleryPage />} />
+					<Route path="/contact" element={<ContactsPage />} />
+				</Route>
+			</Routes>
 		</Router>
 	);
 }
