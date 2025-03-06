@@ -1,13 +1,12 @@
-import { useState, FormEvent, ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, FormEvent } from 'react';
+import { redirect, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
-  Alert,
   Box,
   Button,
   Card as MuiCard,
   Checkbox,
   CircularProgress,
-  Container,
   CssBaseline,
   Divider,
   FormControlLabel,
@@ -23,7 +22,6 @@ import ForgotPassword from './components/ForgotPassword';
 import AppTheme from '../assets/shared-theme/AppTheme';
 import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
-import { authService, LoginCredentials } from '../../services/Authentication';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -37,10 +35,10 @@ const Card = styled(MuiCard)(({ theme }) => ({
     maxWidth: '450px',
   },
   boxShadow:
-    'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
+  'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
   ...theme.applyStyles('dark', {
     boxShadow:
-      'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
+    'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
   }),
 }));
 
@@ -58,29 +56,63 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
     zIndex: -1,
     inset: 0,
     backgroundImage:
-      'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
+    'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
     backgroundRepeat: 'no-repeat',
     ...theme.applyStyles('dark', {
       backgroundImage:
-        'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
+      'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
     }),
   },
 }));
 
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
-  const navigate = useNavigate();
-  const [credentials, setCredentials] = useState<LoginCredentials>({
-    email: '',
-    password: '',
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const URL = import.meta.env.VITE_BACKEND_API_URL + '/login';
 
+const SignIn = (props: any) => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  
   const [emailError, setEmailError] = useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    console.log('isLoggedIn:', localStorage.getItem('isLoggedIn'));
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+      navigate('/admin', { replace: true });
+    } else {
+      setIsLoading(false);
+    }
+  }, [navigate]);
+
+  if (isLoading) {
+    return <CircularProgress />;
+  }
+
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!validateInputs()) {
+      return;
+    }
+    const form = e.target as HTMLFormElement;
+    const email = form.email.value;
+    const password = form.password.value;
+    const formData = {
+      email: email,
+      password: password,
+    };
+    const response = await axios.post(URL, formData);
+    if (response.data.success) {
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('email', email);
+      navigate('/admin');
+    } else {
+      localStorage.setItem('isLoggedIn', 'false');
+      localStorage.setItem('email', '');
+      alert(response.data.message);
+    }
+  };
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -88,28 +120,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
   const handleClose = () => {
     setOpen(false);
-  };
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setCredentials({
-      ...credentials,
-      [e.target.name]: e.target.value,
-    });
-  }
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (validateInputs()) {
-      try {
-        setLoading(true);
-        await authService.login(credentials);
-        navigate('/admin'); // Redirect to dashboard after login
-      } catch (exception: any) {
-        setError(exception.response?.data?.detail || 'Login failed. Please check your credentials.');
-      } finally {
-        setLoading(false);
-      }
-    }
   };
 
   const validateInputs = () => {
@@ -155,7 +165,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
           </Typography>
           <Box
             component="form"
-            onSubmit={handleSubmit}
+            onSubmit={handleLogin}
             noValidate
             sx={{
               display: 'flex',
@@ -173,14 +183,12 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 type="email"
                 name="email"
                 placeholder="a12345@gmail.com"
-                autoComplete="email"
+                autoComplete="off"
                 autoFocus
                 required
                 fullWidth
                 variant="outlined"
                 color={emailError ? 'error' : 'primary'}
-                value={credentials.email}
-                onChange={handleChange}
               />
             </FormControl>
             <FormControl>
@@ -192,14 +200,12 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 placeholder="••••••"
                 type="password"
                 id="password"
-                autoComplete="current-password"
+                autoComplete="off"
                 autoFocus
                 required
                 fullWidth
                 variant="outlined"
                 color={passwordError ? 'error' : 'primary'}
-                value={credentials.password}
-                onChange={handleChange}
               />
             </FormControl>
             <FormControlLabel
@@ -212,9 +218,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               fullWidth
               variant="contained"
               onClick={validateInputs}
-              disabled={loading}
             >
-              {loading ? <CircularProgress size={24} /> : ' '}
               Entrar
             </Button>
             <Link
@@ -261,3 +265,5 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     </AppTheme>
   );
 }
+
+export default SignIn;

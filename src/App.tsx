@@ -17,10 +17,14 @@ import SignIn from './Admin/authentication/SignIn';
 import SignUp from './Admin/authentication/SignUp';
 import MainGrid from './Admin/components/MainGrid';
 import News from './Admin/News';
-import Authorization from './Admin/Authorization';
 
 
 function App() {
+	if (localStorage.getItem('isLoggedIn') !== 'true') {
+		localStorage.setItem('isLoggedIn', 'false');
+		localStorage.setItem('email', '');
+	}
+
 	useEffect(() => {
 		keepTheme();
 		AOS.init({
@@ -34,13 +38,17 @@ function App() {
 		<Router>
 			<Routes>
 				{/* Admin/Back-End Routes */}
-				<Route path="/admin/login" element={<SignIn />} />
-				<Route path="/admin/signup" element={<SignUp />} />
-				<Route path="/admin" element={<Authorization />}>
-					<Route path="" element={<Dashboard />}>
-						<Route path="" element={<MainGrid />} />
-						<Route path="news" element={<News />} />
-					</Route>
+				<Route path="/admin/login" element={
+					<SignIn	/>
+				} />
+				<Route path="/admin/signup" element={
+					<SignUp	/>
+				} />
+				<Route path="/admin" element={
+					<Dashboard />
+				}>
+					<Route path="" element={<MainGrid />} />
+					{/* <Route path="news" element={<News />} /> */}
 				</Route>
 				
 				{/* Front-End Routes */}

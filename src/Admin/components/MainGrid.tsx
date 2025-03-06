@@ -12,7 +12,6 @@ import HighlightedCard from './HighlightedCard';
 import PageViewsBarChart from './PageViewsBarChart';
 import SessionsChart from './SessionsChart';
 import StatCard, { StatCardProps } from './StatCard';
-import { newsService } from '../../services/News';
 
 
 const data: StatCardProps[] = [
@@ -49,58 +48,9 @@ const data: StatCardProps[] = [
 ];
 
 export default function MainGrid() {
-  const [news, setNews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        setLoading(true);
-        const response = await newsService.getAll();
-        setNews(response.data);
-        setError(null);
-      } catch (exception) {
-        setError('Ocorreu um erro ao carregar as notícias.');
-        console.error(exception);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNews();
-  }, []);
-
-  if (loading) {
-    return <CircularProgress />;
-  }
-
-  if (error) {
-    return <Typography color="error">{error}</Typography>;
-  }
-
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
       {/* cards */}
-      <Grid size={{ xs: 12, md: 8, lg:9 }}>
-          <Card>
-            <CardContent>
-              <Typography component="h2" variant="h6">
-                Notícias
-              </Typography>
-              {news.map((article: any) => (
-                <Card key={article.id} sx={{ mb: 2, p: 2}}>
-                  <Typography variant="subtitle1">
-                    {article.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {new Date(article.published_date).toLocaleDateString()}
-                  </Typography>
-                </Card>
-              ))}
-            </CardContent>
-          </Card>
-      </Grid>
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Overview
       </Typography>

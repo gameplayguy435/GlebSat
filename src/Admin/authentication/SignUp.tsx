@@ -1,17 +1,20 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
-import Link from '@mui/material/Link';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import MuiCard from '@mui/material/Card';
+import { useState, useEffect, FormEvent } from 'react';
+import { redirect, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import {
+  Box,
+  Button,
+  Card as MuiCard,
+  CssBaseline,
+  Divider,
+  FormLabel,
+  FormControl,
+  Link,
+  TextField,
+  Typography,
+  Stack,
+  CircularProgress,
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AppTheme from '../assets/shared-theme/AppTheme';
 import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
@@ -59,18 +62,36 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignUp(props: { disableCustomTheme?: boolean }) {
-  const [emailError, setEmailError] = React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-  const [nameError, setNameError] = React.useState(false);
-  const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+const URL = import.meta.env.VITE_BACKEND_API_URL + '/register';
+
+const SignUp = (props: any) => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
+  const [nameError, setNameError] = useState(false);
+  const [nameErrorMessage, setNameErrorMessage] = useState('');
+
+  useEffect(() => {
+    console.log('isLoggedIn:', localStorage.getItem('isLoggedIn'));
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+      navigate('/admin', { replace: true });
+    } else {
+      setIsLoading(false);
+    }
+  }, [navigate]);
+
+  if (isLoading) {
+    return <CircularProgress />;
+  }
 
   const validateInputs = () => {
     const email = document.getElementById('email') as HTMLInputElement;
     const password = document.getElementById('password') as HTMLInputElement;
-    const name = document.getElementById('name') as HTMLInputElement;
+    const name = document.getElementById('fullname') as HTMLInputElement;
 
     let isValid = true;
 
@@ -104,18 +125,41 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
     return isValid;
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    if (nameError || emailError || passwordError) {
-      event.preventDefault();
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!validateInputs()) {
       return;
     }
-    const data = new FormData(event.currentTarget);
-    console.log({
-      name: data.get('name'),
-      lastName: data.get('lastName'),
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const form = e.target as HTMLFormElement;
+    const name = form.fullname.value;
+    const email = form.email.value;
+    const password = form.password.value;
+    const confirmpassword = form.confirmPassword.value;
+    if (password !== confirmpassword) {
+      alert('As palavras-passe não coincidem.');
+      return;
+    } else {
+      const formData = {
+        name: name,
+        email: email,
+        password: password,
+      };
+      console.log(formData);
+      try {
+        const response = await axios.post(URL, formData);
+        if (response.data.success) {
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('email', email);
+          navigate('/admin');
+        } else {
+          localStorage.setItem('isLoggedIn', 'false');
+          localStorage.setItem('email', '');
+          alert(response.data.message);
+        }
+      } catch (exception) {
+        console.error(exception);
+      }
+    }
   };
 
   return (
@@ -134,17 +178,17 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
           </Typography>
           <Box
             component="form"
-            onSubmit={handleSubmit}
+            onSubmit={handleRegister}
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
             <FormControl>
-              <FormLabel htmlFor="name">Nome completo</FormLabel>
+              <FormLabel htmlFor="fullname">Nome completo</FormLabel>
               <TextField
-                autoComplete="name"
-                name="name"
+                autoComplete="off"
+                name="fullname"
                 required
                 fullWidth
-                id="name"
+                id="fullname"
                 placeholder="David Vieira"
                 error={nameError}
                 helperText={nameErrorMessage}
@@ -159,7 +203,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                 id="email"
                 placeholder="a12345@gmail.com"
                 name="email"
-                autoComplete="email"
+                autoComplete="off"
                 variant="outlined"
                 error={emailError}
                 helperText={emailErrorMessage}
@@ -175,17 +219,29 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                 placeholder="••••••"
                 type="password"
                 id="password"
-                autoComplete="new-password"
+                autoComplete="off"
                 variant="outlined"
                 error={passwordError}
                 helperText={passwordErrorMessage}
                 color={passwordError ? 'error' : 'primary'}
               />
             </FormControl>
-            <FormControlLabel
-              control={<Checkbox value="allowExtraEmails" color="primary" />}
-              label="I want to receive updates via email."
-            />
+            <FormControl>
+              <FormLabel htmlFor="confirmPassword">Confirmar palavra passe</FormLabel>
+              <TextField
+                required
+                fullWidth
+                name="confirmPassword"
+                placeholder="••••••"
+                type="password"
+                id="confirmPassword"
+                autoComplete="off"
+                variant="outlined"
+                error={passwordError}
+                helperText={passwordErrorMessage}
+                color={passwordError ? 'error' : 'primary'}
+              />
+            </FormControl>
             <Button
               type="submit"
               fullWidth
@@ -231,3 +287,5 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
     </AppTheme>
   );
 }
+
+export default SignUp;

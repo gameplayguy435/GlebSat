@@ -1,12 +1,16 @@
-import { Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, Outlet, redirect } from 'react-router-dom';
 import type {} from '@mui/x-date-pickers/themeAugmentation';
 import type {} from '@mui/x-charts/themeAugmentation';
 import type {} from '@mui/x-data-grid-pro/themeAugmentation';
 import type {} from '@mui/x-tree-view/themeAugmentation';
 import { alpha } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
+import {
+  Box,
+  CircularProgress,
+  CssBaseline,
+  Stack,
+} from '@mui/material';
 import AppNavbar from './components/AppNavbar';
 import Header from './components/Header';
 import SideMenu from './components/SideMenu';
@@ -25,7 +29,23 @@ const xThemeComponents = {
   ...treeViewCustomizations,
 };
 
-export default function Dashboard(props: { disableCustomTheme?: boolean }) {
+const Dashboard = (props:any) => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    console.log('isLoggedIn:', localStorage.getItem('isLoggedIn'));
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+      navigate('/admin/login', { replace: true });
+    } else {
+      setIsLoading(false);
+    }
+  }, [navigate]);
+
+  if (isLoading) {
+    return <CircularProgress />;
+  }
+
   return (
     <AppTheme {...props} themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
@@ -60,3 +80,5 @@ export default function Dashboard(props: { disableCustomTheme?: boolean }) {
     </AppTheme>
   );
 }
+
+export default Dashboard;
