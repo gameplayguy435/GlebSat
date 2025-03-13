@@ -3,8 +3,8 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import User, Token
-from .serializers import UserSerializer, TokenSerializer
+from .models import User, Token, NewsArticle
+from .serializers import UserSerializer, TokenSerializer, NewsArticleSerializer
 
 SALT = "8b4f6b2cc1868d75ef79e5cfb8779c11b6a374bf0fce05b485581bf4e1e25b96c8c2855015de8449"
 URL = "http://localhost:5173"
@@ -62,6 +62,28 @@ class RegisterView(APIView):
                 {
                     'success': False,
                     'message': message,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+class NewsArticleView(APIView):
+    def get(self, request, format=None):
+        try:
+            news_articles = NewsArticle.objects.all()
+            serializer = NewsArticleSerializer(news_articles, many=True)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Notícias obtidas com sucesso!',
+                    'news_articles': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except NewsArticle.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Notícias não encontradas!',
                 },
                 status=status.HTTP_200_OK,
             )

@@ -15,7 +15,7 @@ const Navigation = () => {
 
   const navLinks = [
     { path: '/', name: 'Home', icon: Home },
-    { path: '/documentation', name: 'Documentation', icon: FileText },
+    // { path: '/documentation', name: 'Documentation', icon: FileText },
     { path: '/about', name: 'About Us', icon: Users },
     { path: '/contact', name: 'Contact', icon: Mail },
     { path: '/news', name: 'News', icon: Newspaper },
@@ -41,7 +41,7 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="backdrop-blur-md fixed w-full z-50 p-8">
+    <nav className="backdrop-blur-md fixed w-full z-50 py-8 sm:px-8 ps-4 ">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">

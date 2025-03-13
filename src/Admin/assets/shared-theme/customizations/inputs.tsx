@@ -404,6 +404,7 @@ export const inputsCustomizations: Components<Theme> = {
           {
             props: {
               size: 'small',
+              multiline: false,
             },
             style: {
               height: '2.25rem',
@@ -412,6 +413,7 @@ export const inputsCustomizations: Components<Theme> = {
           {
             props: {
               size: 'medium',
+              multiline: false,
             },
             style: {
               height: '2.5rem',

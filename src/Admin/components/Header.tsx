@@ -20,8 +20,7 @@ export default function Header() {
     >
       <NavbarBreadcrumbs />
       <Stack direction="row" sx={{ gap: 1 }}>
-        {/* TROCAR DATEPICKER PARA SÓ DATA ATUAL + ARRANJAR OUTRO PICKER PARA INPUTS*/}
-        <CustomDatePicker />
+        <CustomDatePicker textAlign="center" />
         <ThemeToggle />
         <ColorModeIconDropdown />
       </Stack>

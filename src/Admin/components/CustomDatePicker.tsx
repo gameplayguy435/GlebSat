@@ -46,20 +46,21 @@ function ButtonField(props: ButtonFieldProps) {
       startIcon={<CalendarTodayRoundedIcon fontSize="small" />}
       sx={{ minWidth: 'fit-content' }}
     >
-      {label ? `${label}` : 'Pick a date'}
+      {label ? `${label}` : 'Escolha uma data'}
     </Button>
   );
 }
 
-export default function CustomDatePicker() {
-  const [value, setValue] = React.useState<Dayjs | null>(dayjs('2025-02-28'));
+export default function CustomDatePicker(props: any) {
+  const { textAlign } = props;
+  const [value, setValue] = React.useState<Dayjs | null>(dayjs().startOf('day'));
   const [open, setOpen] = React.useState(false);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DatePicker
         value={value}
-        label={value == null ? null : value.format('MMM DD, YYYY')}
+        label={value == null ? null : value.format('DD MMM YYYY')}
         onChange={(newValue) => setValue(newValue)}
         slots={{ field: ButtonField }}
         slotProps={{
@@ -67,6 +68,7 @@ export default function CustomDatePicker() {
           nextIconButton: { size: 'small' },
           previousIconButton: { size: 'small' },
         }}
+        sx={{ textAlign: textAlign }}
         open={open}
         onClose={() => setOpen(false)}
         onOpen={() => setOpen(true)}
