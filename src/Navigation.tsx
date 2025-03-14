@@ -14,12 +14,12 @@ const Navigation = () => {
   }, [location]);
 
   const navLinks = [
-    { path: '/', name: 'Home', icon: Home },
+    { path: '/', name: 'Página Principal', icon: Home },
     // { path: '/documentation', name: 'Documentation', icon: FileText },
-    { path: '/about', name: 'About Us', icon: Users },
-    { path: '/contact', name: 'Contact', icon: Mail },
-    { path: '/news', name: 'News', icon: Newspaper },
-    { path: '/gallery', name: 'Gallery', icon: Image },
+    { path: '/about', name: 'Sobre Nós', icon: Users },
+    { path: '/contact', name: 'Contactos', icon: Mail },
+    { path: '/news', name: 'Notícias', icon: Newspaper },
+    { path: '/gallery', name: 'Galeria', icon: Image },
   ];
 
   const linkVariants = {

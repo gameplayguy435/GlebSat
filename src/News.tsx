@@ -1,116 +1,373 @@
+import { useState, useEffect } from 'react';
+import { 
+  Box, Container, Typography, Grid2 as Grid, Card, CardContent, 
+  CardMedia, CardActions, Paper, Button, useTheme, Chip
+} from '@mui/material';
 import { motion } from 'framer-motion';
-import { Calendar, ArrowRight } from 'lucide-react';
+import { CalendarMonthRounded, ArrowForward } from '@mui/icons-material';
 
 const NewsPage = () => {
+  const theme = useTheme();
+  
+  // Featured/Pinned News
+  const featuredNews = {
+    title: "Grande Avanço na Recolha de Dados Atmosféricos",
+    date: "2025-02-05",
+    summary: "A nossa equipa alcançou um marco significativo na recolha de dados atmosféricos, permitindo medições mais precisas dos parâmetros de qualidade do ar em várias altitudes.",
+    image: "/images/featured-news.jpg",
+    category: "Avanço Técnico"
+  };
+  
+  // Regular News Items
   const newsItems = [
     {
-      title: "Successful Launch of MicroSat-1",
+      title: "Lançamento Bem-Sucedido do GlebSat-1",
       date: "2025-02-01",
-      summary: "Our first microsatellite successfully launched and deployed into low Earth orbit.",
-      image: "/api/placeholder/400/250",
-      category: "Mission Update"
+      summary: "O nosso primeiro microssatélite foi lançado com sucesso e colocado em órbita terrestre baixa.",
+      image: "/images/news1.jpg",
+      category: "Atualização de Missão"
     },
     {
-      title: "New Air Quality Monitoring Features",
+      title: "Novas Funcionalidades de Monitorização da Qualidade do Ar",
       date: "2025-01-15",
-      summary: "Enhanced sensing capabilities added to monitor additional atmospheric pollutants.",
-      image: "/api/placeholder/400/250",
-      category: "Technical Update"
+      summary: "Capacidades de deteção melhoradas para monitorizar poluentes atmosféricos adicionais.",
+      image: "/images/news2.jpg",
+      category: "Atualização Técnica"
     },
     {
-      title: "Research Partnership Announcement",
+      title: "Anúncio de Parceria de Investigação",
       date: "2025-01-01",
-      summary: "New collaboration with leading environmental research institutions.",
-      image: "/api/placeholder/400/250",
-      category: "Partnership"
+      summary: "Nova colaboração com instituições de investigação ambiental líderes.",
+      image: "/images/news3.jpg",
+      category: "Parceria"
     }
   ];
 
-return (
-    <div className="py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold" data-aos="fade-up">
-            Latest News
-          </h1>
-        </div>
-
-        {/* Featured News */}
-        <div className="rounded-xl shadow-xl overflow-hidden mb-12" data-aos="fade-up">
-          <motion.div
-            whileHover={{ y: -5 }}
+  return (
+    <Box sx={{ minHeight: '100vh', py: 8 }} className="news-container">
+      {/* Page Title - With animation */}
+      <Box 
+        component={motion.div}
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        sx={{ 
+          textAlign: 'center',
+          mb: 8
+        }}
+      >
+        <Typography 
+          variant="h2" 
+          component="h1" 
+          fontWeight="bold" 
+          className="color-primary"
+        >
+          Últimas Notícias
+        </Typography>
+        
+        <Typography 
+          variant="h6"
+          component={motion.p}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.8 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="color-secondary"
+          sx={{ 
+            maxWidth: '700px', 
+            mx: 'auto', 
+            mt: 2,
+            px: 2
+          }}
+        >
+          Acompanhe as atualizações mais recentes sobre o nosso projeto e avanços tecnológicos
+        </Typography>
+      </Box>
+      
+      <Container maxWidth="xl">
+        {/* Featured/Pinned News */}
+        <Box 
+          component={motion.div}
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false }}
+          transition={{ duration: 0.8 }}
+          sx={{ mb: 8 }}
+        >
+          <Typography 
+            component={motion.h2}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.6 }}
+            variant="h4" 
+            fontWeight="bold" 
+            className="color-primary"
+            sx={{ mb: 3 }}
           >
-            <div className="md:flex">
-              <div className="md:w-1/2">
-                <div className="aspect-video animate-pulse">
-                  <img 
-                    src="/api/placeholder/800/600" 
-                    alt="Featured news" 
-                    className="w-full h-full object-cover"
+            Notícia em Destaque
+          </Typography>
+          
+          <Card 
+            component={motion.div}
+            whileHover={{ y: -5, boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}
+            elevation={3}
+            className="bg-secondary"
+            sx={{ 
+              borderRadius: 4, 
+              overflow: 'hidden'
+            }}
+          >
+            <Grid container>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CardMedia
+                  component="img"
+                  sx={{ 
+                    height: { xs: '240px', md: '100%' },
+                    objectFit: 'cover'
+                  }}
+                  image={featuredNews.image || "/images/glebsat-front.png"}
+                  alt={featuredNews.title}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CardContent sx={{ p: 4 }}>
+                  <Chip 
+                    label={featuredNews.category} 
+                    color="primary" 
+                    size="small"
+                    sx={{ mb: 2 }}
                   />
-                </div>
-              </div>
-              <div className="md:w-1/2 p-8">
-                <div className="text-sm text-blue-400 mb-2">Featured Story</div>
-                <h2 className="text-2xl font-bold mb-4">
-                  Major Breakthrough in Atmospheric Data Collection
-                </h2>
-                <p className="mb-4 color-secondary">
-                  Our team has achieved a significant milestone in atmospheric data collection,
-                  enabling more precise measurements of air quality parameters at various altitudes.
-                </p>
-                <div className="flex items-center color-secondary mb-6">
-                  <Calendar size={16} className="mr-2" />
-                  <span>February 5, 2025</span>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-500 transition-colors"
-                >
-                  Read More
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* News Grid */}
-        <div className="grid md:grid-cols-3 gap-8">
-          {newsItems.map((item, index) => (
-            <div key={index} className="rounded-xl shadow-xl overflow-hidden" data-aos="fade-up">
-              <motion.div
-                whileHover={{ y: -5 }}
-              >
-                <div className="aspect-video animate-pulse">
-                  <img 
-                    src={item.image} 
-                    alt={item.title}
-                    className="w-full h-48 object-cover"
-                  />
-                </div>
-                <div className="p-6">
-                  <div className="text-sm text-blue-400 mb-2">{item.category}</div>
-                  <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                  <p className="mb-4 color-secondary">{item.summary}</p>
-                  <div className="flex items-center mb-4 color-secondary">
-                    <Calendar size={16} className="mr-2" />
-                    <span>{new Date(item.date).toLocaleDateString()}</span>
-                  </div>
-                  <motion.a
-                    whileHover={{ x: 5 }}
-                    href="#"
-                    className="text-blue-400 flex items-center hover:text-blue-300"
+                  <Typography 
+                    variant="h4" 
+                    component="h3" 
+                    gutterBottom 
+                    className="color-primary"
+                    fontWeight="bold"
                   >
-                    Read More <ArrowRight size={16} className="ml-2" />
-                  </motion.a>
-                </div>
-              </motion.div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+                    {featuredNews.title}
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    sx={{ mb: 3 }} 
+                    className="color-secondary"
+                  >
+                    {featuredNews.summary}
+                  </Typography>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      mb: 3 
+                    }}
+                    className="color-secondary"
+                  >
+                    <CalendarMonthRounded sx={{ mr: 1, fontSize: 20 }} />
+                    <Typography variant="body2">
+                      {new Date(featuredNews.date).toLocaleDateString('pt-PT', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </Typography>
+                  </Box>
+                  <Button
+                    component={motion.button}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    variant="contained"
+                    color="primary"
+                    endIcon={<ArrowForward />}
+                    sx={{ 
+                      mt: 2,
+                      textTransform: 'none',
+                      borderRadius: 2,
+                      px: 3
+                    }}
+                  >
+                    Ler Mais
+                  </Button>
+                </CardContent>
+              </Grid>
+            </Grid>
+          </Card>
+        </Box>
+        
+        {/* News Grid */}
+        <Box sx={{ mb: 6 }}>
+          <Typography 
+            component={motion.h2}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.6 }}
+            variant="h4" 
+            fontWeight="bold" 
+            gutterBottom 
+            className="color-primary"
+            sx={{ mb: 3 }}
+          >
+            Todas as Notícias
+          </Typography>
+          
+          <Grid container spacing={3}>
+            {newsItems.map((item, index) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                <Card 
+                  component={motion.div}
+                  whileHover={{ y: -10, boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false }}
+                  transition={{ duration: 0.5, delay: 0.1 * index }}
+                  elevation={3}
+                  className="bg-secondary"
+                  sx={{ 
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderRadius: 3,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={item.image || "/images/placeholder.jpg"}
+                    alt={item.title}
+                    className="image-overlay"
+                    sx={{ objectFit: 'cover' }}
+                  />
+                  
+                  <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                    <Chip 
+                      label={item.category} 
+                      color="primary" 
+                      size="small"
+                      sx={{ mb: 2 }}
+                    />
+                    
+                    <Typography 
+                      variant="h6" 
+                      component="h3" 
+                      gutterBottom 
+                      className="color-primary"
+                      fontWeight="bold"
+                      sx={{ mb: 2 }}
+                    >
+                      {item.title}
+                    </Typography>
+                    
+                    <Typography 
+                      variant="body2" 
+                      sx={{ mb: 3 }} 
+                      className="color-secondary"
+                    >
+                      {item.summary}
+                    </Typography>
+                    
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        mb: 1
+                      }}
+                      className="color-secondary"
+                    >
+                      <CalendarMonthRounded sx={{ mr: 1, fontSize: 16 }} />
+                      <Typography variant="body2">
+                        {new Date(item.date).toLocaleDateString('pt-PT', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                  
+                  <CardActions sx={{ p: 3, pt: 0 }}>
+                    <Button
+                      component={motion.button}
+                      whileHover={{ x: 5 }}
+                      size="small"
+                      color="primary"
+                      endIcon={<ArrowForward />}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Ler Mais
+                    </Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+        
+        {/* Newsletter Subscription */}
+        {/* <Box 
+          component={motion.div}
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false }}
+          transition={{ duration: 0.8 }}
+          className="bg-tertiary"
+          sx={{ 
+            p: { xs: 4, md: 6 }, 
+            borderRadius: 4,
+            textAlign: 'center',
+            boxShadow: 4
+          }}
+        >
+          <Typography 
+            variant="h5" 
+            gutterBottom 
+            fontWeight="bold" 
+            className="color-primary"
+          >
+            Subscreva a Nossa Newsletter
+          </Typography>
+          
+          <Typography 
+            variant="body1" 
+            className="color-secondary" 
+            sx={{ 
+              maxWidth: '600px', 
+              mx: 'auto',
+              mb: 4
+            }}
+          >
+            Mantenha-se atualizado com as nossas últimas descobertas, avanços tecnológicos e notícias do projeto GlebSat diretamente na sua caixa de entrada.
+          </Typography>
+          
+          <Box
+            component={motion.div}
+            whileHover={{ scale: 1.02 }}
+            sx={{
+              maxWidth: '500px',
+              mx: 'auto',
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 2
+            }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              sx={{
+                py: 1.5,
+                px: 4,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontSize: '1rem',
+                width: '100%'
+              }}
+            >
+              Subscrever
+            </Button>
+          </Box>
+        </Box> */}
+      </Container>
+    </Box>
   );
 };
 

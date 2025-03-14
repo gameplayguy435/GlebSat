@@ -227,17 +227,6 @@ const Content = () => {
                             height="200"
                             image={placeholderImage}
                         />
-                        <PushPin 
-                            sx={{ 
-                            position: 'absolute', 
-                            top: 10, 
-                            right: 10,
-                            color: 'primary.main',
-                            bgcolor: 'white',
-                            borderRadius: '50%',
-                            p: 0.5
-                            }}
-                        />
                         <Box>
                             <CardContent sx={{ flexGrow: 1 }}>
                                 <Typography gutterBottom variant="h5" component="div" sx={{ mb: 2 }}>
@@ -277,17 +266,6 @@ const Content = () => {
                             height="200"
                             image={placeholderImage}
                         />
-                        <PushPin 
-                            sx={{ 
-                            position: 'absolute', 
-                            top: 10, 
-                            right: 10,
-                            color: 'primary.main',
-                            bgcolor: 'white',
-                            borderRadius: '50%',
-                            p: 0.5
-                            }}
-                        />
                         <Box>
                             <CardContent sx={{ flexGrow: 1 }}>
                                 <Typography gutterBottom variant="h5" component="div" sx={{ mb: 2 }}>
@@ -326,17 +304,6 @@ const Content = () => {
                             component="img"
                             height="200"
                             image={placeholderImage}
-                        />
-                        <PushPin 
-                            sx={{ 
-                            position: 'absolute', 
-                            top: 10, 
-                            right: 10,
-                            color: 'primary.main',
-                            bgcolor: 'white',
-                            borderRadius: '50%',
-                            p: 0.5
-                            }}
                         />
                         <Box>
                             <CardContent sx={{ flexGrow: 1 }}>

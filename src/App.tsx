@@ -15,7 +15,7 @@ import NewsPage from "./News";
 import Dashboard from './Admin/Dashboard';
 import SignIn from './Admin/authentication/SignIn';
 import SignUp from './Admin/authentication/SignUp';
-import MainGrid from './Admin/components/MainGrid';
+import MainGrid from './Admin/MainGrid';
 import Content from './Admin/Content';
 import Missions from './Admin/Missions';
 
