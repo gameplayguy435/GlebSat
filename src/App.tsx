@@ -16,7 +16,7 @@ import Dashboard from './Admin/Dashboard';
 import SignIn from './Admin/authentication/SignIn';
 import SignUp from './Admin/authentication/SignUp';
 import MainGrid from './Admin/MainGrid';
-import Content from './Admin/Content';
+import ManageContent from './Admin/ManageContent';
 import Missions from './Admin/Missions';
 
 
@@ -49,7 +49,7 @@ function App() {
 					<Dashboard />
 				}>
 					<Route path="" element={<MainGrid />} />
-					<Route path="content" element={<Content />} />
+					<Route path="content" element={<ManageContent />} />
 					<Route path="missions" element={<Missions />} />
 				</Route>
 				

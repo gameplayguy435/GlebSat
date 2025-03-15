@@ -3,8 +3,8 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import User, Token, NewsArticle
-from .serializers import UserSerializer, TokenSerializer, NewsArticleSerializer
+from .models import User, Token, NewsArticle, Category, Image
+from .serializers import UserSerializer, TokenSerializer, NewsArticleSerializer, CategorySerializer, ImageSerializer
 
 SALT = "8b4f6b2cc1868d75ef79e5cfb8779c11b6a374bf0fce05b485581bf4e1e25b96c8c2855015de8449"
 URL = "http://localhost:5173"
@@ -84,6 +84,98 @@ class NewsArticleView(APIView):
                 {
                     'success': False,
                     'message': 'Notícias não encontradas!',
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+class CreateNewsArticleView(APIView):
+    def get(self, request, format=None):
+        serializer = NewsArticleSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Notícia criada com sucesso!',
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            message = ""
+            for key in serializer.errors:
+                message += serializer.errors[key][0]
+            return Response(
+                {
+                    'success': False,
+                    'message': message,
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+class CategoryView(APIView):
+    def get(self, request, format=None):
+        try:
+            categories = Category.objects.all()
+            serializer = CategorySerializer(categories, many=True)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Categorias obtidas com sucesso!',
+                    'categories': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Category.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Categorias não encontradas!',
+                },
+                status=status.HTTP_200_OK,
+            )
+
+class ImageView(APIView):
+    def get(self, request, format=None):
+        try:
+            categories = Image.objects.all()
+            serializer = ImageSerializer(categories, many=True)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Imagens obtidas com sucesso!',
+                    'images': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Image.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Imagens não encontradas!',
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+class CreateImageView(APIView):
+    def get(self, request, format=None):
+        serializer = ImageSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Imagem inserida com sucesso!',
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            message = ""
+            for key in serializer.errors:
+                message += serializer.errors[key][0]
+            return Response(
+                {
+                    'success': False,
+                    'message': message,
                 },
                 status=status.HTTP_200_OK,
             )

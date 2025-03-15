@@ -68,6 +68,7 @@ class Image(models.Model):
     image = models.ImageField(upload_to='images/')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     news_article = models.ForeignKey(NewsArticle, on_delete=models.SET_NULL, null=True)
+    active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
         return self.name

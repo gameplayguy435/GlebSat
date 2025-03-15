@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Token, NewsArticle
+from .models import User, Token, NewsArticle, Category, Image
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,4 +14,14 @@ class TokenSerializer(serializers.ModelSerializer):
 class NewsArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsArticle
-        fields = ['title', 'summary', 'content', 'published_date', 'author']
+        fields = ['id', 'title', 'summary', 'content', 'published_date', 'author']
+        
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+        
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = ['id', 'name', 'image', 'category', 'news_article', 'active']
