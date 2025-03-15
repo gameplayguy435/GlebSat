@@ -34,6 +34,7 @@ import {
     Edit,
     MoreVert,
     NewspaperRounded,
+    PostAdd,
     PushPin,
     RemoveCircleOutlineRounded,
 } from '@mui/icons-material';
@@ -50,6 +51,7 @@ interface NewsArticle {
     content: string;
     publishedDate: string;
     author: string;
+    mainImage?: string | null;
 }
 
 const ManageNews = () => {
@@ -132,9 +134,15 @@ const ManageNews = () => {
                 <Button 
                     variant="contained" 
                     color="primary" 
-                    onClick={() => handleDialogOpen()}
+                    onClick={handleDialogOpen}
+                    startIcon={<PostAdd />}
+                    sx={{
+                        borderRadius: 1,
+                        textTransform: 'none',
+                        fontWeight: 'normal'
+                    }}
                 >
-                    Adicionar Notícia
+                    Adicionar notícia
                 </Button>
             </Box>
             
@@ -149,9 +157,9 @@ const ManageNews = () => {
                             border: '1px dashed',
                             borderColor: 'divider'
                         }}>
-                            <NewspaperRounded sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.3 }} />
+                            <PostAdd sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.3 }} />
                             <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>
-                                Nenhuma imagem disponível
+                                Nenhuma notícia disponível
                             </Typography>
                         </Box>
                     </Grid>

@@ -10,7 +10,6 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import MenuButton from './MenuButton';
 import MenuContent from './MenuContent';
-import CardAlert from './CardAlert';
 
 interface SideMenuMobileProps {
   open: boolean | undefined;
@@ -41,38 +40,35 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
     >
       <Stack
         sx={{
-          maxWidth: '70dvw',
+          maxWidth: '90dvw',
+          minWidth: 250,
           height: '100%',
         }}
       >
-        <Stack direction="row" sx={{ p: 2, pb: 0, gap: 1 }}>
+        <Stack direction="row" sx={{ p: 1, gap: 1 }}>
           <Stack
             direction="row"
             sx={{ gap: 1, alignItems: 'center', flexGrow: 1, p: 1 }}
           >
             <Avatar
               sizes="small"
-              alt="Riley Carter"
-              src="/static/images/avatar/7.jpg"
+              alt="David Vieira"
+              src="/images/david.jpg"
               sx={{ width: 24, height: 24 }}
             />
             <Typography component="p" variant="h6">
-              Riley Carter
+              David Vieira
             </Typography>
           </Stack>
-          <MenuButton showBadge>
-            <NotificationsRoundedIcon />
-          </MenuButton>
         </Stack>
         <Divider />
         <Stack sx={{ flexGrow: 1 }}>
           <MenuContent />
           <Divider />
         </Stack>
-        <CardAlert />
         <Stack sx={{ p: 2 }}>
           <Button variant="outlined" fullWidth startIcon={<LogoutRoundedIcon />} onClick={handleLogout}>
-            Logout
+            Terminar Sessão
           </Button>
         </Stack>
       </Stack>

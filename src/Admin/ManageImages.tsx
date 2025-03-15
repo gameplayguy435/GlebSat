@@ -33,19 +33,7 @@ import { motion } from 'framer-motion';
 import AntSwitch from './components/AntSwitch';
 import { styled } from '@mui/material/styles';
 
-const URL = import.meta.env.VITE_BACKEND_API_URL;
-
-const VisuallyHiddenInput = styled('input')({
-    clip: 'rect(0 0 0 0)',
-    clipPath: 'inset(50%)',
-    height: 1,
-    overflow: 'hidden',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    whiteSpace: 'nowrap',
-    width: 1,
-});
+const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 interface GalleryImage {
     id: number;
@@ -66,25 +54,29 @@ interface NewsArticle {
     title: string;
 }
 
+const FileInput = styled('input')({
+    height: 0,
+    position: 'absolute',
+});
+
 const ImagesContent = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const { enqueueSnackbar } = useSnackbar();
+
     const [currentImage, setCurrentImage] = useState<GalleryImage | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-    const { enqueueSnackbar } = useSnackbar();
+    const [imageFile, setImageFile] = useState<File | null>(null);
     
     const [images, setImages] = useState<GalleryImage[]>([]);
-    
     const [categories, setCategories] = useState<Category[]>([]);
-    
     const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch(URL + '/category');
+                const response = await fetch(API_URL + '/category');
                 const data = await response.json();
                 
                 if (data.success) {
@@ -102,7 +94,7 @@ const ImagesContent = () => {
 
         const fetchNewsArticles = async () => {
             try {
-                const response = await fetch(URL + '/newsarticle');
+                const response = await fetch(API_URL + '/newsarticle');
                 const data = await response.json();
                 
                 if (data.success) {
@@ -120,12 +112,16 @@ const ImagesContent = () => {
 
         const fetchImages = async () => {
             try {
-                const response = await fetch(URL + '/image');
+                const response = await fetch(API_URL + '/image');
                 const data = await response.json();
                 
                 if (data.success) {
-                    setImages(data.images);
-                    console.log('Images loaded:', data.images);
+                    const updatedUrlImages = data.images.map(img => ({
+                        ...img,
+                        image: img.image.startsWith('../backend') ? img.image : '../backend' + img.image,
+                    }));
+                    setImages(updatedUrlImages);
+                    console.log('Images loaded:', updatedUrlImages);
                 } else {
                     console.error('Failed to load Images:', data.message);
                     setError('Failed to load Images: ' + data.message);
@@ -142,32 +138,105 @@ const ImagesContent = () => {
         setLoading(false);
     }, []);
 
-    const saveImages = async (path: string, image: GalleryImage): Promise<boolean> => {
+    const saveImages = async (path: string, image: GalleryImage, file?: File): Promise<boolean> => {
         try {
-            const response = await fetch(URL + path, {
-                body: JSON.stringify(image),
+            const formData = new FormData();
+            formData.append('name', image.name);
+            if (image.category !== null) formData.append('category', image.category.toString());
+            if (image.news_article !== null) formData.append('news_article', image.news_article.toString());
+            formData.append('active', image.active.toString());
+            
+            if (file) {
+                formData.append('image', file);
+            }
+
+            const response = await fetch(API_URL + path, {
+                method: 'POST',
+                body: formData,
             });
             const data = await response.json();
             
             if (data.success) {
-                setImages(data.images);
-                console.log('Imagem guardada com sucesso:', data.images);
+                const updatedUrlImages = data.images.map(img => ({
+                    ...img,
+                    image: img.image.startsWith('../backend') ? img.image : '../backend' + img.image,
+                }));
+                setImages(updatedUrlImages);
+                console.log('Imagem guardada com sucesso:', updatedUrlImages);
                 return true;
             } else {
                 console.error('Ocorreu um erro ao guardar a imagem:', data.message);
-                setError('Ocorreu um erro ao guardar a imagem: ' + data.message);
+                enqueueSnackbar('Erro: ' + data.message, { variant: 'error' });
                 return false;
             }
         } catch (err) {
             console.error('Erro ao guardar a imagem:', err);
-            setError('Erro ao guardar a imagem.');
+            enqueueSnackbar('Erro de conexão ao guardar a imagem', { variant: 'error' });
             return false;
         }
     }
+    
+    const handleToggleActive = (image: GalleryImage) => {
+        const imageToUpdate = images.find(img => img.id === image.id);
+        if (imageToUpdate) {
+            imageToUpdate.active = !imageToUpdate.active;
+            saveImages('/image/update/' + imageToUpdate.id, imageToUpdate, undefined);
+        }
+        
+        enqueueSnackbar(
+            `Imagem ${image.active ? 'desativada' : 'ativada'} com sucesso!`, 
+            { variant: 'success', autoHideDuration: 3000 }
+        );
+    };
+    
+    const handleSave = async () => {
+        if (currentImage) {
+            if (currentImage.id === 0) {
+                if (!imageFile) {
+                    enqueueSnackbar(
+                        "Por favor, escolha uma imagem para adicionar!",
+                        { variant: 'error', autoHideDuration: 3000 }
+                    );
+                    return;
+                }
+
+                var inserted = await saveImages('/image/create', currentImage, imageFile);
+                if (inserted) {
+                    enqueueSnackbar(
+                        "Imagem adicionada com sucesso!", 
+                        { variant: 'success', autoHideDuration: 3000 }
+                    );
+                }
+            } else {
+                var inserted = await saveImages('/image/update/' + currentImage.id, currentImage, imageFile ? imageFile : undefined);
+                if (inserted) {
+                    enqueueSnackbar(
+                        "Imagem atualizada com sucesso!", 
+                        { variant: 'success', autoHideDuration: 3000 }
+                    );
+                }
+            }
+        }
+        
+        handleDialogClose();
+    };
 
     const handleDialogOpen = (image: GalleryImage | null = null) => {
-        setCurrentImage(image || { id: 0, name: "", image: "", category: null, news_article: null, active: true });
-        setImagePreview(image ? image.image : null);
+        if (image) {
+            setCurrentImage(image);
+            setImagePreview(image.image);
+        } else {
+            setCurrentImage({ 
+                id: 0, 
+                name: "", 
+                image: "", 
+                category: null, 
+                news_article: null, 
+                active: true 
+            });
+            setImagePreview(null);
+        }
+        setImageFile(null);
         setDialogOpen(true);
     };
 
@@ -175,11 +244,14 @@ const ImagesContent = () => {
         setDialogOpen(false);
         setCurrentImage(null);
         setImagePreview(null);
+        setImageFile(null);
     };
     
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            setImageFile(file);
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 if (e.target?.result) {
@@ -187,7 +259,6 @@ const ImagesContent = () => {
                     if (currentImage) {
                         setCurrentImage({
                             ...currentImage,
-                            image: e.target.result as string  // In a real app, this would be handled differently
                         });
                     }
                 }
@@ -216,53 +287,6 @@ const ImagesContent = () => {
         }
     };
     
-    const handleToggleActive = (image: GalleryImage) => {
-        const updatedImages = images.map(img => 
-            img.id === image.id ? { ...img, active: !img.active } : img
-        );
-        setImages(updatedImages);
-        
-        // In a real app, you'd make an API call here
-        enqueueSnackbar(
-            `Imagem ${image.active ? 'desativada' : 'ativada'} com sucesso!`, 
-            { variant: 'success', autoHideDuration: 3000 }
-        );
-    };
-    
-    const handleSave = async () => {
-        if (currentImage) {
-            if (currentImage.id === 0) {
-                var inserted = await saveImages('/image/create', currentImage);
-                if (inserted) {
-                    const newImage = {
-                        ...currentImage,
-                        id: Math.max(...images.map(img => img.id)) + 1
-                    };
-                    setImages([...images, newImage]);
-
-                    enqueueSnackbar(
-                        "Imagem adicionada com sucesso!", 
-                        { variant: 'success', autoHideDuration: 3000 }
-                    );
-                }
-            } else {
-                var inserted = await saveImages('/image/create', currentImage);
-                if (inserted) {
-                    const updatedImages = images.map(img => 
-                        img.id === currentImage.id ? currentImage : img
-                    );
-                    setImages(updatedImages);
-
-                    enqueueSnackbar(
-                        "Imagem atualizada com sucesso!", 
-                        { variant: 'success', autoHideDuration: 3000 }
-                    );
-                }
-            }
-        }
-        
-        handleDialogClose();
-    };
     
     // Render loading state
     if (loading) {
@@ -609,13 +633,14 @@ const ImagesContent = () => {
                                         component="label"
                                         variant="outlined"
                                         startIcon={<CloudUpload />}
+                                        fullWidth
                                         sx={{ 
                                             borderRadius: 1,
                                             textTransform: 'none'
                                         }}
                                     >
                                         Carregar imagem
-                                        <VisuallyHiddenInput 
+                                        <FileInput 
                                             type="file" 
                                             accept="image/*"
                                             onChange={handleImageChange}

@@ -72,3 +72,7 @@ class Image(models.Model):
 
     def __str__(self) -> str:
         return self.name
+    
+class ImageHash(models.Model):
+    image = models.ForeignKey(Image, on_delete=models.CASCADE)
+    hash = models.CharField(max_length=32, unique=True)
