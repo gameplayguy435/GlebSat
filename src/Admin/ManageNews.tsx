@@ -1,6 +1,5 @@
-import { useState, useEffect, MouseEvent } from 'react';
-import { 
-    Alert,
+import { useState, useEffect, MouseEvent, ChangeEvent } from 'react';
+import {
     Box,
     Button,
     Card,
@@ -19,11 +18,9 @@ import {
     IconButton,
     Menu,
     MenuItem,
-    Snackbar,
     Stack,
     TextField,
     Typography,
-    useTheme,
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -33,69 +30,191 @@ import {
     Delete,
     Edit,
     MoreVert,
-    NewspaperRounded,
     PostAdd,
     PushPin,
-    RemoveCircleOutlineRounded,
+    NotInterested,
 } from '@mui/icons-material';
 import CustomDatePicker from './components/CustomDatePicker';
-import placeholderImage from '../assets/images/placeholder.jpg';
 import AntSwitch from './components/AntSwitch';
+import { SnackbarProvider, useSnackbar } from 'notistack';
+import dayjs, { Dayjs } from 'dayjs';
 
-const URL = import.meta.env.VITE_BACKEND_API_URL;
+// @TODO
+// Update news article select in images on change
+// Add validation to required fields
+// Make the news cards the same height per row
+// Insert dynamically the news articles author
+// Put the news articles in the main website
+// Change login and signup logos
+// Change top-left 'sitemark-web' to 'ver página oficial'
+// Get the user names and email to put into the sidemenus
+
+
+const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 interface NewsArticle {
     id?: number;
     title: string;
     summary: string;
     content: string;
-    publishedDate: string;
-    author: string;
+    published_date?: string | null;
+    author: number;
+    active: boolean;
+    pinned: boolean;
     mainImage?: string | null;
 }
 
-const ManageNews = () => {
+const NewsContent = () => {
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+    const { enqueueSnackbar } = useSnackbar();
+
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [currentMenuIndex, setCurrentMenuIndex] = useState<number | null>(null);
     
+    const [currentNewsArticle, setCurrentNewsArticle] = useState<NewsArticle | null>(null);
     const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
 
     useEffect(() => {
         const fetchNewsArticles = async () => {
             try {
-                const response = await fetch(URL + '/newsarticle');
+                const response = await fetch(API_URL + '/newsarticle');
                 const data = await response.json();
                 
                 if (data.success) {
                     setNewsArticles(data.news_articles);
                     console.log('News Articles loaded:', data.news_articles);
                 } else {
-                    console.error('Failed to load News Articles:', data.message);
-                    setError('Failed to load News Articles: ' + data.message);
+                    console.error('Erro ao carregar as notícias:', data.message);
+                    enqueueSnackbar('Erro ao carregar as notícias', { variant: 'error' });
                 }
             } catch (err) {
-                console.error('Error fetching News Articles:', err);
-                setError('Error connecting to the server. Please try again later.');
+                console.error('Erro ao carregar as notícias:', err);
+                enqueueSnackbar('Erro: ' + err, { variant: 'error' });
             }
-        };
+        }
         
         fetchNewsArticles();
         setLoading(false);
     }, []);
-      
+    
+    const saveNewsArticles = async (path: string, newsArticle: NewsArticle): Promise<boolean> => {
+        try {
+            const defaultSummary = newsArticle.content.length > 100 ? newsArticle.content.substring(0, 100) + '...' : newsArticle.content;
+            const formData = new FormData();
+            formData.append('title', newsArticle.title);
+            newsArticle.summary ? formData.append('summary', newsArticle.summary) : formData.append('summary', defaultSummary);
+            formData.append('content', newsArticle.content);
+            newsArticle.published_date ? formData.append('published_date', newsArticle.published_date) : formData.append('published_date', new Date().toISOString().split('T')[0]);
+            formData.append('author', '1');
+            formData.append('active', newsArticle.active.toString());
+            formData.append('pinned', newsArticle.pinned.toString());
 
-    const handleDialogOpen = () => {
-        // SE FOR EDIT PEGA NOS DADOS E METE NO INPUT
+            const response = await fetch(API_URL + path, {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                setNewsArticles(data.news_articles);
+                enqueueSnackbar('Notícia guardada com sucesso!', { variant: 'success' });
+                return true;
+            } else {
+                console.error('Ocorreu um erro ao guardar a notícia:', data.message);
+                enqueueSnackbar('Erro: ' + data.message, { variant: 'error' });
+                return false;
+            }
+        } catch (err) {
+            console.error('Erro ao guardar a notícia:', err);
+            enqueueSnackbar('Erro de conexão ao guardar a notícia', { variant: 'error' });
+            return false;
+        }
+    }
+    
+    const handleSave = async () => {
+        if (currentNewsArticle) {
+            if (currentNewsArticle.id === 0) {
+                var inserted = await saveNewsArticles('/newsarticle/create', currentNewsArticle);
+                if (inserted) {
+                    enqueueSnackbar(
+                        "Notícia criada com sucesso!", 
+                        { variant: 'success', autoHideDuration: 3000 }
+                    );
+                }
+            } else {
+                var inserted = await saveNewsArticles('/newsarticle/update/' + currentNewsArticle.id, currentNewsArticle);
+                if (inserted) {
+                    enqueueSnackbar(
+                        "Notícia atualizada com sucesso!", 
+                        { variant: 'success', autoHideDuration: 3000 }
+                    );
+                }
+            }
+        }
+        
+        handleDialogClose();
+    };
+
+    const handleToggleActive = async () => {
+        if (currentMenuIndex === null) return;
+        
+        const newsArticle = newsArticles[currentMenuIndex];
+        const updatedArticle = {...newsArticle, active: !newsArticle.active};
+        
+        const success = await saveNewsArticles('/newsarticle/update/' + newsArticle.id, updatedArticle);
+        if (success) {
+            enqueueSnackbar(
+                `Notícia ${newsArticle.active ? 'desativada' : 'ativada'} com sucesso!`, 
+                { variant: 'success', autoHideDuration: 3000 }
+            );
+        }
+        
+        handleMenuClose();
+    };
+
+    const handleTogglePinned = async () => {
+        if (currentMenuIndex === null) return;
+        
+        const newsArticle = newsArticles[currentMenuIndex];
+        const updatedArticle = {...newsArticle, pinned: !newsArticle.pinned};
+        
+        const success = await saveNewsArticles('/newsarticle/update/' + newsArticle.id, updatedArticle);
+        if (success) {
+            enqueueSnackbar(
+                `Notícia ${newsArticle.pinned ? 'desafixada' : 'afixada'} com sucesso!`, 
+                { variant: 'success', autoHideDuration: 3000 }
+            );
+        }
+        
+        handleMenuClose();
+    };
+
+    const handleDialogOpen = (newsArticle: NewsArticle | null = null) => {
+        if (newsArticle) {
+            const dateString = newsArticle.published_date || new Date().toISOString().split('T')[0];
+            setCurrentNewsArticle({
+                ...newsArticle,
+                published_date: dateString
+            });
+        } else {
+            setCurrentNewsArticle({ 
+                id: 0, 
+                title: "", 
+                summary: "", 
+                content: "",
+                published_date: new Date().toISOString().split('T')[0],
+                author: 1,
+                active: true,
+                pinned: false,
+            });
+        }
         setDialogOpen(true);
         handleMenuClose();
     };
     const handleDialogClose = () => {
         setDialogOpen(false);
-        setNewsArticles([]);
+        setCurrentNewsArticle(null);
     };
 
     const handleMenuOpen = (e: MouseEvent<HTMLElement>, index: number) => {
@@ -106,21 +225,32 @@ const ManageNews = () => {
         setAnchorEl(null);
         setCurrentMenuIndex(null);
     };
-      
-    // Render loading state
+    
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        if (currentNewsArticle) {
+            setCurrentNewsArticle({
+                ...currentNewsArticle,
+                [name]: value
+            });
+        }
+    };
+    
+    const handleDateChange = (date: Dayjs | null) => {
+        console.log(date);
+        if (currentNewsArticle) {
+            setCurrentNewsArticle({
+                ...currentNewsArticle,
+                published_date: date?.format('YYYY-MM-DD') || ''
+            });
+        }
+        console.log(currentNewsArticle);
+    };
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <CircularProgress />
-            </Box>
-        );
-    }
-      
-    // Render error state
-    if (error) {
-        return (
-            <Box sx={{ p: 3 }}>
-                <Alert severity="error">{error}</Alert>
             </Box>
         );
     }
@@ -134,7 +264,7 @@ const ManageNews = () => {
                 <Button 
                     variant="contained" 
                     color="primary" 
-                    onClick={handleDialogOpen}
+                    onClick={() => handleDialogOpen()}
                     startIcon={<PostAdd />}
                     sx={{
                         borderRadius: 1,
@@ -167,147 +297,109 @@ const ManageNews = () => {
             ) : (
             <>
                 <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 3 }}>
-                        <Card 
-                            sx={{ 
-                                display: 'flex', 
-                                flexDirection: 'column',
-                            }}
-                            variant="outlined"
-                        >
-                            <CardMedia
-                                component="img"
-                                height="200"
-                                image={placeholderImage}
-                            />
-                            <Box>
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Typography gutterBottom variant="h5" component="div" sx={{ mb: 2 }}>
-                                        Lorem Ipsum dolor sit amet
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                        <CalendarMonthRounded sx={{ mr: 0.5, color: 'text.secondary' }} />
-                                        <Typography variant="body2" color="text.secondary">
-                                            12-01-2025
-                                        </Typography>
+                    {newsArticles.map((newsArticle, index) => (
+                        <Grid key={index} size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 3 }}>
+                            <Card
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    opacity: newsArticle.active ? 1 : 0.6,
+                                    position: 'relative',
+                                }}
+                                variant="outlined"
+                            >
+                                {newsArticle.pinned && (
+                                    <Box sx={{ 
+                                        position: 'absolute',
+                                        top: 10,
+                                        left: 10,
+                                        bgcolor: 'primary.main',
+                                        color: 'white',
+                                        borderRadius: 5,
+                                        px: 1,
+                                        py: 0.5,
+                                        fontSize: '0.8rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 0.5
+                                    }}>
+                                        <PushPin fontSize="small" />
+                                        Destaque
                                     </Box>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                                    </Typography>
-                                </CardContent>
-                                <CardActions sx={{ justifyContent: 'flex-end', alignItems: 'start', mr: 0 }}>
-                                    <IconButton 
-                                        aria-label="more" 
-                                        onClick={(e) => handleMenuOpen(e, 0)}
-                                    >
-                                        <MoreVert />
-                                    </IconButton>
-                                </CardActions>
-                            </Box>
-                        </Card>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 3 }}>
-                        <Card 
-                            sx={{ 
-                                display: 'flex', 
-                                flexDirection: 'column',
-                            }}
-                            variant="outlined"
-                        >
-                            <CardMedia
-                                component="img"
-                                height="200"
-                                image={placeholderImage}
-                            />
-                            <Box>
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Typography gutterBottom variant="h5" component="div" sx={{ mb: 2 }}>
-                                        Lorem Ipsum dolor sit amet
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                        <CalendarMonthRounded sx={{ mr: 0.5, color: 'text.secondary' }} />
-                                        <Typography variant="body2" color="text.secondary">
-                                            12-01-2025
+                                )}
+                                <CardMedia
+                                    component="img"
+                                    height="200"
+                                    image={newsArticle.mainImage ? `../backend${newsArticle.mainImage}` : '../backend/media/images/glebsat-front.png'}
+                                />
+                                <Box>
+                                    <CardContent sx={{ flexGrow: 1 }}>
+                                        <Typography gutterBottom variant="h5" component="div" sx={{ mb: 2 }}>
+                                            {newsArticle.title}
                                         </Typography>
-                                    </Box>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                                    </Typography>
-                                </CardContent>
-                                <CardActions sx={{ justifyContent: 'flex-end', alignItems: 'start', mr: 0 }}>
-                                    <IconButton 
-                                        aria-label="more" 
-                                        onClick={(e) => handleMenuOpen(e, 0)}
-                                    >
-                                        <MoreVert />
-                                    </IconButton>
-                                </CardActions>
-                            </Box>
-                        </Card>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 3 }}>
-                        <Card 
-                            sx={{ 
-                                display: 'flex', 
-                                flexDirection: 'column',
-                            }}
-                            variant="outlined"
-                        >
-                            <CardMedia
-                                component="img"
-                                height="200"
-                                image={placeholderImage}
-                            />
-                            <Box>
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Typography gutterBottom variant="h5" component="div" sx={{ mb: 2 }}>
-                                        Lorem Ipsum dolor sit amet
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                        <CalendarMonthRounded sx={{ mr: 0.5, color: 'text.secondary' }} />
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                            <CalendarMonthRounded sx={{ mr: 0.5, color: 'text.secondary' }} />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {newsArticle.published_date ? 
+                                                    new Date(newsArticle.published_date).toLocaleDateString('pt-PT', {
+                                                        day: '2-digit',
+                                                        month: 'long',
+                                                        year: 'numeric'
+                                                    }) : 
+                                                    ''}
+                                            </Typography>
+                                        </Box>
                                         <Typography variant="body2" color="text.secondary">
-                                            12-01-2025
+                                            {newsArticle.summary}
                                         </Typography>
-                                    </Box>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                                    </Typography>
-                                </CardContent>
-                                <CardActions sx={{ justifyContent: 'flex-end', alignItems: 'start', mr: 0 }}>
-                                    <IconButton 
-                                        aria-label="more" 
-                                        onClick={(e) => handleMenuOpen(e, 0)}
-                                    >
-                                        <MoreVert />
-                                    </IconButton>
-                                </CardActions>
-                            </Box>
-                        </Card>
-                    </Grid>
+                                    </CardContent>
+                                    <CardActions sx={{ justifyContent: 'flex-end', alignItems: 'start', mr: 0 }}>
+                                        <IconButton 
+                                            aria-label="more" 
+                                            onClick={(e) => handleMenuOpen(e, index)}
+                                        >
+                                            <MoreVert />
+                                        </IconButton>
+                                    </CardActions>
+                                </Box>
+                            </Card>
+                        </Grid>
+                    ))}
                 </Grid>
                 <Menu
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
                     onClose={handleMenuClose}
                 >
-                    <MenuItem onClick={() => handleDialogOpen()}>
+                    <MenuItem onClick={() => {
+                        if (currentMenuIndex !== null) {
+                            handleDialogOpen(newsArticles[currentMenuIndex]);
+                        }
+                    }}>
                         <Edit fontSize="small" sx={{ mr: 1 }} />
                         Editar
                     </MenuItem>
-                    <MenuItem>
+                    <MenuItem onClick={handleTogglePinned}>
                         <PushPin fontSize="small" sx={{ mr: 1 }} />
-                        Afixar
+                        {currentMenuIndex !== null && newsArticles[currentMenuIndex].pinned 
+                            ? 'Desafixar'
+                            : 'Afixar'
+                        }
                     </MenuItem>
-                    <MenuItem>
-                        <AddCircleOutlineRounded fontSize="small" sx={{ mr: 1 }} />
-                        Ativar
-                    </MenuItem>
-                    <MenuItem 
-                        onClick={() => handleDialogOpen()}
-                        sx={{ color: 'error.main' }}
-                    >
-                        <Delete fontSize="small" sx={{ mr: 1 }} />
-                        Apagar
+                    <MenuItem onClick={handleToggleActive}>
+                        {currentMenuIndex !== null && newsArticles[currentMenuIndex].active 
+                            ? (
+                                <>
+                                    <NotInterested fontSize="small" sx={{ mr: 1 }} />
+                                    Desativar
+                                </>
+                            ) : (
+                                <>
+                                    <AddCircleOutlineRounded fontSize="small" sx={{ mr: 1 }} />
+                                    Ativar
+                                </>
+                            )
+                        }
                     </MenuItem>
                 </Menu>
             </>
@@ -324,8 +416,7 @@ const ManageNews = () => {
                         borderRadius: 2,
                         backgroundImage: 'none',
                         overflow: 'hidden',
-                        boxShadow: (theme) => 
-                            'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
+                        boxShadow: 'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
                     }
                 }}
             >
@@ -337,7 +428,7 @@ const ManageNews = () => {
                     borderBottom: '1px solid',
                     borderColor: 'divider'
                 }}>
-                    Nova Notícia
+                    {currentNewsArticle && currentNewsArticle.id !== 0 ? 'Editar Notícia' : 'Nova Notícia'}
                 </DialogTitle>
                 <DialogContent sx={{ px: 4, py: 3 }}>                
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -361,6 +452,8 @@ const ManageNews = () => {
                                     fullWidth
                                     placeholder="Título da notícia"
                                     variant="outlined"
+                                    value={currentNewsArticle?.title || ''}
+                                    onChange={handleInputChange}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             borderRadius: 1,
@@ -370,8 +463,17 @@ const ManageNews = () => {
                             </FormControl>
                             
                             <FormControl>
-                                <FormLabel htmlFor="title">Data de Publicação</FormLabel>
-                                <CustomDatePicker/>
+                                <FormLabel 
+                                    htmlFor="published_date"
+                                    sx={{ 
+                                        mb: 1, 
+                                        fontWeight: 500,
+                                        fontSize: '0.875rem'
+                                    }}
+                                >
+                                    Data de Publicação
+                                </FormLabel>
+                                <CustomDatePicker onChange={handleDateChange} value={currentNewsArticle?.published_date ? dayjs(currentNewsArticle.published_date) : null}/>
                             </FormControl>
                             
                             <FormControl>
@@ -395,6 +497,8 @@ const ManageNews = () => {
                                     minRows={2}
                                     maxRows={4}
                                     variant="outlined"
+                                    value={currentNewsArticle?.summary || ''}
+                                    onChange={handleInputChange}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             borderRadius: 1,
@@ -425,6 +529,8 @@ const ManageNews = () => {
                                     maxRows={10}
                                     placeholder="Conteúdo completo da notícia"
                                     variant="outlined"
+                                    value={currentNewsArticle?.content || ''}
+                                    onChange={handleInputChange}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             borderRadius: 1,
@@ -450,9 +556,20 @@ const ManageNews = () => {
                                         }
                                     }}
                                     control={
-                                        <AntSwitch defaultChecked sx={{ mr: 3.5, left: 15 }}/>
+                                        <AntSwitch 
+                                            checked={currentNewsArticle?.active ?? true} 
+                                            onChange={(e) => {
+                                                if (currentNewsArticle) {
+                                                    setCurrentNewsArticle({
+                                                        ...currentNewsArticle,
+                                                        active: e.target.checked
+                                                    });
+                                                }
+                                            }}
+                                            sx={{ mr: 3.5, left: 15 }}
+                                        />
                                     }
-                                    label="Ativar"
+                                    label="Ativar notícia"
                                 />
                                 <FormControlLabel
                                     sx={{
@@ -461,7 +578,18 @@ const ManageNews = () => {
                                         }
                                     }}
                                     control={
-                                        <AntSwitch defaultChecked sx={{ mr: 3.5, left: 15 }}/>
+                                        <AntSwitch 
+                                            checked={currentNewsArticle?.pinned ?? false} 
+                                            onChange={(e) => {
+                                                if (currentNewsArticle) {
+                                                    setCurrentNewsArticle({
+                                                        ...currentNewsArticle,
+                                                        pinned: e.target.checked
+                                                    });
+                                                }
+                                            }}
+                                            sx={{ mr: 3.5, left: 15 }}
+                                        />
                                     }
                                     label="Afixar notícia"
                                 />
@@ -493,10 +621,9 @@ const ManageNews = () => {
                         Cancelar
                     </Button>
                     <Button 
-                        // onClick={handleSave} 
+                        onClick={handleSave} 
                         variant="contained" 
                         color="primary"
-                        // disabled={loading}
                         sx={{
                             px: 3,
                             py: 1,
@@ -505,27 +632,27 @@ const ManageNews = () => {
                             fontWeight: 'normal'
                         }}
                     >
-                        {/* {loading ? <CircularProgress size={24} /> : 'Guardar'} */}
                         Guardar
                     </Button>
                 </DialogActions>
             </Dialog>
-            
-            {/* Snackbar for feedback */}
-            <Snackbar 
-                open={false}
-                autoHideDuration={6000} 
-                onClose={() => setSnackbar(prev => ({...prev, open: false}))}
-            >
-                <Alert 
-                    severity="error"
-                    variant="filled" 
-                    onClose={() => setSnackbar(prev => ({...prev, open: false}))}
-                >
-                    Parabens ganhou
-                </Alert>
-            </Snackbar>
         </Box>
+    );
+}
+
+const ManageNews = () => {
+    return (
+        <SnackbarProvider
+            maxSnack={3}
+            autoHideDuration={3000}
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+            }}
+            preventDuplicate
+        >
+            <NewsContent />
+        </SnackbarProvider>
     );
 }
 

@@ -61,7 +61,6 @@ const FileInput = styled('input')({
 
 const ImagesContent = () => {
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const { enqueueSnackbar } = useSnackbar();
 
@@ -83,12 +82,12 @@ const ImagesContent = () => {
                     setCategories(data.categories);
                     console.log('Categories loaded:', data.categories);
                 } else {
-                    console.error('Failed to load categories:', data.message);
-                    setError('Failed to load categories: ' + data.message);
+                    console.error('Erro ao carregar as categorias: ', data.message);
+                    enqueueSnackbar('Erro: ao carregar as categorias', { variant: 'error' });
                 }
             } catch (err) {
-                console.error('Error fetching categories:', err);
-                setError('Error connecting to the server. Please try again later.');
+                console.error('Erro ao carregar as categorias:', err);
+                enqueueSnackbar('Erro: ' + err, { variant: 'error' });
             }
         }
 
@@ -101,12 +100,12 @@ const ImagesContent = () => {
                     setNewsArticles(data.news_articles);
                     console.log('News Articles loaded:', data.news_articles);
                 } else {
-                    console.error('Failed to load News Articles:', data.message);
-                    setError('Failed to load News Articles: ' + data.message);
+                    console.error('Erro ao carregar as notícias:', data.message);
+                    enqueueSnackbar('Erro ao carregar as notícias', { variant: 'error' });
                 }
             } catch (err) {
-                console.error('Error fetching News Articles:', err);
-                setError('Error connecting to the server. Please try again later.');
+                console.error('Erro ao carregar as notícias:', err);
+                enqueueSnackbar('Erro: ' + err, { variant: 'error' });
             }
         }
 
@@ -123,12 +122,12 @@ const ImagesContent = () => {
                     setImages(updatedUrlImages);
                     console.log('Images loaded:', updatedUrlImages);
                 } else {
-                    console.error('Failed to load Images:', data.message);
-                    setError('Failed to load Images: ' + data.message);
+                    console.error('Erro ao carregar as imagens:', data.message);
+                    enqueueSnackbar('Erro ao carregar as imagens', { variant: 'error' });
                 }
             } catch (err) {
-                console.error('Error fetching Images:', err);
-                setError('Error connecting to the server. Please try again later.');
+                console.error('Erro ao carregar as imagens:', err);
+                enqueueSnackbar('Erro: ' + err, { variant: 'error' });
             }
         }
 
@@ -287,21 +286,10 @@ const ImagesContent = () => {
         }
     };
     
-    
-    // Render loading state
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <CircularProgress />
-            </Box>
-        );
-    }
-    
-    // Render error state
-    if (error) {
-        return (
-            <Box sx={{ p: 3 }}>
-                <Alert severity="error">{error}</Alert>
             </Box>
         );
     }

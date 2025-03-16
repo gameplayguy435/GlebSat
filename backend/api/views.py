@@ -91,14 +91,18 @@ class NewsArticleView(APIView):
             )
             
 class CreateNewsArticleView(APIView):
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         serializer = NewsArticleSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            
+            news_articles = NewsArticle.objects.all()
+            serializer = NewsArticleSerializer(news_articles, many=True)
             return Response(
                 {
                     'success': True,
                     'message': 'Notícia criada com sucesso!',
+                    'news_articles': serializer.data,
                 },
                 status=status.HTTP_200_OK,
             )
@@ -114,6 +118,45 @@ class CreateNewsArticleView(APIView):
                 status=status.HTTP_200_OK,
             )
             
+class UpdateNewsArticleView(APIView):
+    def post(self, request, news_article_id, format=None):
+        try:
+            news_article = NewsArticle.objects.get(id=news_article_id)
+            serializer = NewsArticleSerializer(news_article, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                
+                news_articles = NewsArticle.objects.all()
+                serializer = NewsArticleSerializer(news_articles, many=True)
+                return Response(
+                    {
+                        'success': True,
+                        'message': 'Notícia atualizada com sucesso!',
+                        'news_articles': serializer.data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                message = ""
+                for key in serializer.errors:
+                    message += serializer.errors[key][0]
+                return Response(
+                    {
+                        'success': False,
+                        'message': message,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+        except NewsArticle.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Notícia não encontrada!',
+                },
+                status=status.HTTP_200_OK,
+            )
+                
+
 class CategoryView(APIView):
     def get(self, request, format=None):
         try:

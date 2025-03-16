@@ -617,7 +617,7 @@ const HomePage = () => {
                   to="/news"
                   sx={{ mt: 1 }}
                 >
-                  Leia as Nossas Últimas Atualizações
+                  Leia as Nossas Últimas Notícias
                 </Button>
               </Grid>
               <Grid size={{ xs: 12, lg: 6}}>
@@ -668,7 +668,7 @@ const HomePage = () => {
                   Galeria de Imagens
                 </Typography>
                 <Typography variant="body1" paragraph className="color-secondary">
-                  Explore a jornada visual da nossa missão através de impressionantes imagens de satélite, 
+                  Explora a jornada visual da nossa missão através de impressionantes imagens de satélite, 
                   fotografias de equipamentos, eventos da equipa e vistas deslumbrantes da Terra a partir do espaço. 
                   A nossa galeria mostra a beleza do nosso planeta e a tecnologia que usamos para o monitorizar.
                 </Typography>
@@ -680,7 +680,7 @@ const HomePage = () => {
                   to="/gallery"
                   sx={{ mt: 1 }}
                 >
-                  Explorar a Nossa Galeria
+                  Explora a Nossa Galeria
                 </Button>
               </Grid>
             </Grid>

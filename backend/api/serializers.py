@@ -14,7 +14,7 @@ class TokenSerializer(serializers.ModelSerializer):
 class NewsArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsArticle
-        fields = ['id', 'title', 'summary', 'content', 'published_date', 'author']
+        fields = ['id', 'title', 'summary', 'content', 'published_date', 'author', 'active', 'pinned']
         
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
