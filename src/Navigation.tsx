@@ -45,7 +45,9 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
-            <div className="text-xl font-bold">GlebSat</div>
+            <div className="text-xl font-bold">
+              GlebSat
+            </div>
           </div>
           
           <div className="hidden lg:block">

@@ -12,7 +12,7 @@ import {
   FieldSection,
 } from '@mui/x-date-pickers/models';
 import 'dayjs/locale/pt';
-import { newsService } from '../../services/News';
+import { Chip } from '@mui/material';
 
 dayjs.locale('pt');
 
@@ -56,7 +56,7 @@ function ButtonField(props: ButtonFieldProps) {
 }
 
 export default function CustomDatePicker(props: any) {
-  const { textAlign, onChange, value: externalValue, defaultValue } = props;
+  const { textAlign, disabled, onChange, value: externalValue, defaultValue } = props;
 
   const parseDateValue = (dateValue: any): Dayjs | null => {
     if (!dateValue) return null;
@@ -115,7 +115,7 @@ export default function CustomDatePicker(props: any) {
           previousIconButton: { size: 'small' },
         }}
         sx={{ textAlign: textAlign }}
-        open={open}
+        open={disabled ? false : open}
         onClose={() => setOpen(false)}
         onOpen={() => setOpen(true)}
         views={['day', 'month']}

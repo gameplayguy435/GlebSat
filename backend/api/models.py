@@ -38,12 +38,14 @@ class NewsArticle(models.Model):
         return self.title
     
     def GetImages(self):
-        # Get all images for this article
-        return Image.objects.filter(news_article=self) or []
+        return Image.objects.filter(news_article=self, active=True) or []
+    
+    def GetFrontImage(self):
+        images = self.GetImages()
+        return images[0] if images else None
     
     @classmethod
     def GetTopArticles(cls, limit=4):
-        # Get the top articles for main page
         pinnedArticles = cls.objects.filter(pinned=True, active=True)
         if pinnedArticles.count() > limit:
             return pinnedArticles[:limit]

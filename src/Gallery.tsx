@@ -1,33 +1,100 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  Box, Container, Typography, Grid2 as Grid, Card, Paper, IconButton, useTheme
+  Box, Container, Typography, Grid2 as Grid, Card, IconButton, useTheme, CircularProgress
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
+interface GalleryImage {
+  id: number;
+  name: string;
+  image: string;
+  category: number | null;
+  news_article: number | null;
+  active: boolean;
+}
+
+interface Category {
+  id: number;
+  name: string;
+}
+
 const GalleryPage = () => {
   const theme = useTheme();
   const [selectedImage, setSelectedImage] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [galleryByCategory, setGalleryByCategory] = useState<{[key: string]: any[]}>({});
 
-  // Gallery categories and images
-  const galleries = {
-    development: [
-      { id: 1, url: "/images/glebsat-front.png", title: "Montagem do Protótipo Inicial" },
-      { id: 2, url: "/images/glebsat-equipa1.jpg", title: "Calibração de Sensores" },
-      { id: 3, url: "/api/placeholder/400/300", title: "Fase de Testes" }
-    ],
-    mission: [
-      { id: 4, url: "/api/placeholder/400/300", title: "Preparação para Lançamento" },
-      { id: 5, url: "/api/placeholder/400/300", title: "Implementação" },
-      { id: 6, url: "/api/placeholder/400/300", title: "Primeiras Imagens Orbitais" }
-    ],
-    process: [
-      { id: 7, url: "/images/david.jpg", title: "Sessão de Planeamento da Equipa" },
-      { id: 8, url: "/images/ricardo.jpg", title: "Integração de Componentes" },
-      { id: 9, url: "/images/rafael.jpg", title: "Controlo de Qualidade" },
-      { id: 10, url: "/images/guilherme.jpg", title: "Design do Satélite" }
-    ]
-  };
+  // Fetch categories and images from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_URL}/category`);
+        const data = await response.json();
+        
+        if (data.success) {
+          setCategories(data.categories);
+          console.log('Categories loaded:', data.categories);
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      }
+    };
+
+    const fetchImages = async () => {
+      try {
+        const response = await fetch(`${API_URL}/image`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Format image URLs properly
+          const activeImages = data.images
+            .filter((img: GalleryImage) => img.active)
+            .map((img: GalleryImage) => ({
+              ...img,
+              image: img.image.startsWith('../backend') ? img.image : '../backend' + img.image,
+            }));
+            
+          setImages(activeImages);
+          console.log('Images loaded:', activeImages);
+        }
+      } catch (err) {
+        console.error('Error fetching images:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+    fetchImages();
+  }, []);
+
+  // Organize images by category when either images or categories change
+  useEffect(() => {
+    if (categories.length > 0 && images.length > 0) {
+      const organizedGallery: {[key: string]: any[]} = {};
+      
+      categories.forEach(category => {
+        const categoryImages = images
+          .filter(image => image.category === category.id)
+          .map(image => ({
+            id: image.id,
+            url: image.image,
+            title: image.name
+          }));
+          
+        if (categoryImages.length > 0) {
+          organizedGallery[category.name] = categoryImages;
+        }
+      });
+      
+      setGalleryByCategory(organizedGallery);
+    }
+  }, [categories, images]);
 
   // Image Modal Component
   const ImageModal = ({ image, onClose }) => {
@@ -226,6 +293,19 @@ const GalleryPage = () => {
     </Box>
   );
 
+  if (loading) {
+    return (
+      <Box sx={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center' 
+      }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ minHeight: '100vh', py: 8 }} className="gallery-container">
       <Box 
@@ -266,10 +346,20 @@ const GalleryPage = () => {
       </Box>
       
       <Container maxWidth="xl">
-        {/* Gallery Sections */}
-        <GallerySection title="Processo de Desenvolvimento" images={galleries.development} />
-        <GallerySection title="Imagens da Missão" images={galleries.mission} />
-        <GallerySection title="Documentação do Processo" images={galleries.process} />
+      {Object.keys(galleryByCategory).length === 0 ? (
+          <Typography 
+            variant="h5" 
+            align="center" 
+            className="color-secondary"
+            sx={{ my: 10 }}
+          >
+            Ainda não existem imagens na galeria
+          </Typography>
+        ) : (
+          Object.entries(galleryByCategory).map(([categoryName, categoryImages]) => (
+            <GallerySection key={categoryName} title={categoryName} images={categoryImages} />
+          ))
+        )}
       </Container>
 
       {/* Modal for enlarged image view */}

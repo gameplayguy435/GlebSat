@@ -27,7 +27,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { 
     AddCircleOutlineRounded,
     CalendarMonthRounded,
-    Delete,
     Edit,
     MoreVert,
     PostAdd,
@@ -38,17 +37,7 @@ import CustomDatePicker from './components/CustomDatePicker';
 import AntSwitch from './components/AntSwitch';
 import { SnackbarProvider, useSnackbar } from 'notistack';
 import dayjs, { Dayjs } from 'dayjs';
-
-// @TODO
-// Update news article select in images on change
-// Add validation to required fields
-// Make the news cards the same height per row
-// Insert dynamically the news articles author
-// Put the news articles in the main website
-// Change login and signup logos
-// Change top-left 'sitemark-web' to 'ver página oficial'
-// Get the user names and email to put into the sidemenus
-
+import eventHandler from './services/EventHandler';
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
@@ -61,7 +50,7 @@ interface NewsArticle {
     author: number;
     active: boolean;
     pinned: boolean;
-    mainImage?: string | null;
+    main_image?: string | null;
 }
 
 const NewsContent = () => {
@@ -82,8 +71,12 @@ const NewsContent = () => {
                 const data = await response.json();
                 
                 if (data.success) {
-                    setNewsArticles(data.news_articles);
-                    console.log('News Articles loaded:', data.news_articles);
+                    const articlesWithFreshImages = data.news_articles.map(article => ({
+                        ...article,
+                        main_image: article.main_image ? article.main_image : null
+                    }));
+                    setNewsArticles(articlesWithFreshImages);
+                    console.log('News Articles loaded:', articlesWithFreshImages);
                 } else {
                     console.error('Erro ao carregar as notícias:', data.message);
                     enqueueSnackbar('Erro ao carregar as notícias', { variant: 'error' });
@@ -92,21 +85,35 @@ const NewsContent = () => {
                 console.error('Erro ao carregar as notícias:', err);
                 enqueueSnackbar('Erro: ' + err, { variant: 'error' });
             }
-        }
+        };
         
         fetchNewsArticles();
         setLoading(false);
+
+        const handleImageUpdate = () => {
+            fetchNewsArticles();
+        }
+
+        eventHandler.on('images-updated', handleImageUpdate);
+
+        return () => {
+            eventHandler.remove('images-updated', handleImageUpdate);
+        }
     }, []);
     
     const saveNewsArticles = async (path: string, newsArticle: NewsArticle): Promise<boolean> => {
         try {
             const defaultSummary = newsArticle.content.length > 100 ? newsArticle.content.substring(0, 100) + '...' : newsArticle.content;
             const formData = new FormData();
+
             formData.append('title', newsArticle.title);
             newsArticle.summary ? formData.append('summary', newsArticle.summary) : formData.append('summary', defaultSummary);
             formData.append('content', newsArticle.content);
             newsArticle.published_date ? formData.append('published_date', newsArticle.published_date) : formData.append('published_date', new Date().toISOString().split('T')[0]);
-            formData.append('author', '1');
+
+            const userId = localStorage.getItem('userId');
+            formData.append('author', userId && userId !== '' ? userId : '1');
+
             formData.append('active', newsArticle.active.toString());
             formData.append('pinned', newsArticle.pinned.toString());
 
@@ -118,7 +125,9 @@ const NewsContent = () => {
             
             if (data.success) {
                 setNewsArticles(data.news_articles);
-                enqueueSnackbar('Notícia guardada com sucesso!', { variant: 'success' });
+                
+                eventHandler.dispatch('news-articles-updated');
+
                 return true;
             } else {
                 console.error('Ocorreu um erro ao guardar a notícia:', data.message);
@@ -134,6 +143,15 @@ const NewsContent = () => {
     
     const handleSave = async () => {
         if (currentNewsArticle) {
+            if (!currentNewsArticle.title.trim()) {
+                enqueueSnackbar('O título é obrigatório', { variant: 'error' });
+                return;
+            }
+            
+            if (!currentNewsArticle.content.trim()) {
+                enqueueSnackbar('O conteúdo da notícia é obrigatório', { variant: 'error' });
+                return;
+            }
             if (currentNewsArticle.id === 0) {
                 var inserted = await saveNewsArticles('/newsarticle/create', currentNewsArticle);
                 if (inserted) {
@@ -160,7 +178,12 @@ const NewsContent = () => {
         if (currentMenuIndex === null) return;
         
         const newsArticle = newsArticles[currentMenuIndex];
-        const updatedArticle = {...newsArticle, active: !newsArticle.active};
+        const pinned = !newsArticle.active ? newsArticle.pinned : false;
+        const updatedArticle = {
+            ...newsArticle,
+            active: !newsArticle.active,
+            pinned: pinned
+        };
         
         const success = await saveNewsArticles('/newsarticle/update/' + newsArticle.id, updatedArticle);
         if (success) {
@@ -191,6 +214,9 @@ const NewsContent = () => {
     };
 
     const handleDialogOpen = (newsArticle: NewsArticle | null = null) => {
+        const userId = localStorage.getItem('userId');
+        const authorId = userId && userId !== '' ? parseInt(userId) : 1;
+        
         if (newsArticle) {
             const dateString = newsArticle.published_date || new Date().toISOString().split('T')[0];
             setCurrentNewsArticle({
@@ -204,7 +230,7 @@ const NewsContent = () => {
                 summary: "", 
                 content: "",
                 published_date: new Date().toISOString().split('T')[0],
-                author: 1,
+                author: authorId,
                 active: true,
                 pinned: false,
             });
@@ -305,6 +331,7 @@ const NewsContent = () => {
                                     flexDirection: 'column',
                                     opacity: newsArticle.active ? 1 : 0.6,
                                     position: 'relative',
+                                    height: '100%',
                                 }}
                                 variant="outlined"
                             >
@@ -330,9 +357,12 @@ const NewsContent = () => {
                                 <CardMedia
                                     component="img"
                                     height="200"
-                                    image={newsArticle.mainImage ? `../backend${newsArticle.mainImage}` : '../backend/media/images/glebsat-front.png'}
+                                    image={newsArticle.main_image
+                                        ? `../backend${newsArticle.main_image}`
+                                        : '../backend/media/images/glebsat-front.png'
+                                    }
                                 />
-                                <Box>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
                                     <CardContent sx={{ flexGrow: 1 }}>
                                         <Typography gutterBottom variant="h5" component="div" sx={{ mb: 2 }}>
                                             {newsArticle.title}
@@ -353,7 +383,7 @@ const NewsContent = () => {
                                             {newsArticle.summary}
                                         </Typography>
                                     </CardContent>
-                                    <CardActions sx={{ justifyContent: 'flex-end', alignItems: 'start', mr: 0 }}>
+                                    <CardActions sx={{ justifyContent: 'flex-end', alignItems: 'center', p: 2 }}>
                                         <IconButton 
                                             aria-label="more" 
                                             onClick={(e) => handleMenuOpen(e, index)}

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Avatar from '@mui/material/Avatar';
 import MuiDrawer, { drawerClasses } from '@mui/material/Drawer';
@@ -6,9 +5,11 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import SelectContent from './SelectContent';
 import MenuContent from './MenuContent';
 import OptionsMenu from './OptionsMenu';
+import { Button } from '@mui/material';
+import { Link } from 'react-router-dom';
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 
 const drawerWidth = 240;
 
@@ -41,7 +42,28 @@ export default function SideMenu() {
           p: 1.5,
         }}
       >
-        <SelectContent />
+        <Button
+          component={Link}
+          to="/"
+          variant="outlined"
+          startIcon={<HomeRoundedIcon />}
+          fullWidth
+          sx={{
+            justifyContent: 'center',
+            textAlign: 'left',
+            maxHeight: 56,
+            width: 215,
+            borderRadius: 1,
+            textTransform: 'none',
+            fontWeight: 500,
+            pl: 1.5,
+            '&:hover': {
+              backgroundColor: 'action.hover'
+            }
+          }}
+        >
+          Ver Página Principal
+        </Button>
       </Box>
       <Divider />
       <Box
@@ -72,10 +94,10 @@ export default function SideMenu() {
         />
         <Box sx={{ mr: 'auto' }}>
           <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
-            David Vieira
+            { localStorage.getItem('username') }
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            paujorvi18@gmail.com
+            { localStorage.getItem('email') }
           </Typography>
         </Box>
         <OptionsMenu />

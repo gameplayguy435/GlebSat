@@ -32,6 +32,7 @@ import {
 import { motion } from 'framer-motion';
 import AntSwitch from './components/AntSwitch';
 import { styled } from '@mui/material/styles';
+import eventHandler from './services/EventHandler';
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
@@ -135,6 +136,16 @@ const ImagesContent = () => {
         fetchNewsArticles();
         fetchImages();
         setLoading(false);
+
+        const handleNewsArticleUpdate = () => {
+            fetchNewsArticles();
+        }
+
+        eventHandler.on('news-articles-updated', handleNewsArticleUpdate);
+
+        return () => {
+            eventHandler.remove('news-articles-updated', handleNewsArticleUpdate);
+        }
     }, []);
 
     const saveImages = async (path: string, image: GalleryImage, file?: File): Promise<boolean> => {
@@ -161,7 +172,9 @@ const ImagesContent = () => {
                     image: img.image.startsWith('../backend') ? img.image : '../backend' + img.image,
                 }));
                 setImages(updatedUrlImages);
-                console.log('Imagem guardada com sucesso:', updatedUrlImages);
+
+                eventHandler.dispatch('images-updated');
+
                 return true;
             } else {
                 console.error('Ocorreu um erro ao guardar a imagem:', data.message);
@@ -183,37 +196,53 @@ const ImagesContent = () => {
         }
         
         enqueueSnackbar(
-            `Imagem ${image.active ? 'desativada' : 'ativada'} com sucesso!`, 
+            `Imagem ${image.active ? 'ativada' : 'desativada'} com sucesso!`, 
             { variant: 'success', autoHideDuration: 3000 }
         );
     };
     
     const handleSave = async () => {
-        if (currentImage) {
-            if (currentImage.id === 0) {
-                if (!imageFile) {
-                    enqueueSnackbar(
-                        "Por favor, escolha uma imagem para adicionar!",
-                        { variant: 'error', autoHideDuration: 3000 }
-                    );
-                    return;
-                }
+        if (!currentImage) {
+            return;
+        }
 
-                var inserted = await saveImages('/image/create', currentImage, imageFile);
-                if (inserted) {
-                    enqueueSnackbar(
-                        "Imagem adicionada com sucesso!", 
-                        { variant: 'success', autoHideDuration: 3000 }
-                    );
-                }
-            } else {
-                var inserted = await saveImages('/image/update/' + currentImage.id, currentImage, imageFile ? imageFile : undefined);
-                if (inserted) {
-                    enqueueSnackbar(
-                        "Imagem atualizada com sucesso!", 
-                        { variant: 'success', autoHideDuration: 3000 }
-                    );
-                }
+        if (!currentImage.name.trim()) {
+            enqueueSnackbar(
+                "Por favor, escolha um nome", 
+                { variant: 'error', autoHideDuration: 3000 }
+            );
+            return;
+        }
+        if (!currentImage.category) {
+            enqueueSnackbar(
+                "Por favor, selecione uma categoria", 
+                { variant: 'error', autoHideDuration: 3000 }
+            );
+            return;
+        }
+        if (currentImage.id === 0) {
+            if (!imageFile) {
+                enqueueSnackbar(
+                    "Por favor, escolha uma imagem para adicionar!",
+                    { variant: 'error', autoHideDuration: 3000 }
+                );
+                return;
+            }
+
+            var inserted = await saveImages('/image/create', currentImage, imageFile);
+            if (inserted) {
+                enqueueSnackbar(
+                    "Imagem adicionada com sucesso!", 
+                    { variant: 'success', autoHideDuration: 3000 }
+                );
+            }
+        } else {
+            var inserted = await saveImages('/image/update/' + currentImage.id, currentImage, imageFile ? imageFile : undefined);
+            if (inserted) {
+                enqueueSnackbar(
+                    "Imagem atualizada com sucesso!", 
+                    { variant: 'success', autoHideDuration: 3000 }
+                );
             }
         }
         
@@ -441,35 +470,47 @@ const ImagesContent = () => {
                                                         <Button
                                                             variant="contained"
                                                             size="small"
-                                                            startIcon={image.active ? <ToggleOn /> : <ToggleOff />}
                                                             onClick={() => handleToggleActive(image)}
                                                             sx={{ 
                                                                 bgcolor: 'rgba(255, 255, 255, 0.15)',
                                                                 color: 'white',
                                                                 textTransform: 'none',
+                                                                minWidth: '36px',
+                                                                width: '36px',
+                                                                height: '36px',
+                                                                padding: 0,
+                                                                display: 'flex',
+                                                                justifyContent: 'center',
+                                                                alignItems: 'center',
                                                                 '&:hover': {
                                                                     bgcolor: 'rgba(255, 255, 255, 0.25)',
                                                                 }
                                                             }}
                                                         >
-                                                            {image.active ? 'Ativo' : 'Inativo'}
+                                                            {image.active ? <ToggleOn /> : <ToggleOff />}
                                                         </Button>
                                                         
                                                         <Button
                                                             variant="contained"
                                                             size="small"
-                                                            startIcon={<Edit />}
                                                             onClick={() => handleDialogOpen(image)}
                                                             sx={{ 
                                                                 bgcolor: 'rgba(255, 255, 255, 0.15)',
                                                                 color: 'white',
                                                                 textTransform: 'none',
+                                                                minWidth: '36px',
+                                                                width: '36px',
+                                                                height: '36px',
+                                                                padding: 0,
+                                                                display: 'flex',
+                                                                justifyContent: 'center',
+                                                                alignItems: 'center',
                                                                 '&:hover': {
                                                                     bgcolor: 'rgba(255, 255, 255, 0.25)',
                                                                 }
                                                             }}
                                                         >
-                                                            Editar
+                                                            <Edit />
                                                         </Button>
                                                     </Box>
                                                 </Box>

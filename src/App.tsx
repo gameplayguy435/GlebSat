@@ -18,12 +18,15 @@ import SignUp from './Admin/authentication/SignUp';
 import MainGrid from './Admin/MainGrid';
 import ManageContent from './Admin/ManageContent';
 import Missions from './Admin/Missions';
+import NewsArticlePage from './NewsArticlePage';
 
 
 function App() {
 	if (localStorage.getItem('isLoggedIn') !== 'true') {
 		localStorage.setItem('isLoggedIn', 'false');
 		localStorage.setItem('email', '');
+		localStorage.setItem('userId', '');
+		localStorage.setItem('username', '');
 	}
 
 	useEffect(() => {
@@ -58,6 +61,7 @@ function App() {
 					<Route path="/" element={<HomePage />} />
 					<Route path="/about" element={<AboutUsPage />} />
 					<Route path="/news" element={<NewsPage />} />
+					<Route path="/news/article/:id" element={<NewsArticlePage />} />
 					<Route path="/gallery" element={<GalleryPage />} />
 					<Route path="/contact" element={<ContactsPage />} />
 				</Route>

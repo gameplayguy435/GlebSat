@@ -10,7 +10,8 @@ import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import SideMenuMobile from './SideMenuMobile';
 import MenuButton from './MenuButton';
-import ColorModeIconDropdown from '../assets/shared-theme/ColorModeIconDropdown';
+import { Satellite, SatelliteAlt, SatelliteAltRounded, SatelliteRounded } from '@mui/icons-material';
+// import ColorModeIconDropdown from '../assets/shared-theme/ColorModeIconDropdown';
 
 const Toolbar = styled(MuiToolbar)({
   width: '100%',
@@ -61,14 +62,14 @@ export default function AppNavbar() {
           <Stack
             direction="row"
             spacing={1}
-            sx={{ justifyContent: 'center', mr: 'auto' }}
+            sx={{ justifyContent: 'center', alignItems: 'center', mr: 'auto' }}
           >
-            <CustomIcon />
+            <SatelliteAltRounded />
             <Typography variant="h4" component="h1" sx={{ color: 'text.primary' }}>
-              Dashboard
+              GlebSat
             </Typography>
           </Stack>
-          <ColorModeIconDropdown />
+          {/* <ColorModeIconDropdown /> */}
           <MenuButton aria-label="menu" onClick={toggleDrawer(true)}>
             <MenuRoundedIcon />
           </MenuButton>

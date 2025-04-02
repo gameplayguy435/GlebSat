@@ -4,7 +4,7 @@ from .models import User, Token, NewsArticle, Category, Image
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['name', 'email', 'password', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'email', 'password', 'created_at', 'updated_at']
 
 class TokenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,9 +12,17 @@ class TokenSerializer(serializers.ModelSerializer):
         fields = ['token', 'created_at', 'expires_at', 'user_id', 'is_used' ]
         
 class NewsArticleSerializer(serializers.ModelSerializer):
+    main_image = serializers.SerializerMethodField()
+    
     class Meta:
         model = NewsArticle
-        fields = ['id', 'title', 'summary', 'content', 'published_date', 'author', 'active', 'pinned']
+        fields = ['id', 'title', 'summary', 'content', 'published_date', 'author', 'active', 'pinned', 'main_image']
+        
+    def get_main_image(self, obj):
+        frontImage =  obj.GetFrontImage()
+        if frontImage:
+            return frontImage.image.url
+        return None
         
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:

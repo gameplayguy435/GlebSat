@@ -27,10 +27,12 @@ class LoginView(APIView):
                     status=status.HTTP_200_OK,
                 )
             else:
+                serializer = UserSerializer(user)
                 return Response(
                     {
                         'success': True,
                         'message': 'Login efetuado com sucesso!',
+                        'user': serializer.data,
                     },
                     status=status.HTTP_200_OK,
                 )
@@ -88,6 +90,52 @@ class NewsArticleView(APIView):
                     'message': 'Notícias não encontradas!',
                 },
                 status=status.HTTP_200_OK,
+            )
+    
+class GetNewsArticleView(APIView):
+    def get(self, request, news_article_id, format=None):
+        try:
+            news_article = NewsArticle.objects.get(id=news_article_id)
+            serializer = NewsArticleSerializer(news_article)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Notícia obtida com sucesso!',
+                    'news_article': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except NewsArticle.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Notícia não encontrada!',
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+class GetNewsArticleImagesView(APIView):
+    def get(self, request, news_article_id, format=None):
+        try:
+            news_article = NewsArticle.objects.get(id=news_article_id)
+            images = Image.objects.filter(news_article=news_article)
+            serializer = ImageSerializer(images, many=True)
+            
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Imagens obtidas com sucesso!',
+                    'images': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except NewsArticle.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Notícia não encontrada!',
+                },
+                status=status.HTTP_404_NOT_FOUND,
             )
             
 class CreateNewsArticleView(APIView):

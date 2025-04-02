@@ -22,6 +22,8 @@ export default function OptionsMenu() {
   const handleLogout = () => {
     localStorage.setItem('isLoggedIn', 'false');
     localStorage.setItem('email', '');
+    localStorage.setItem('userId', '');
+    localStorage.setItem('username', '');
     navigate('/admin/login');
   };
 

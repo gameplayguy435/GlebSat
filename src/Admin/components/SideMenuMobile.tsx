@@ -22,6 +22,8 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
   const handleLogout = () => {
     localStorage.setItem('isLoggedIn', 'false');
     localStorage.setItem('email', '');
+    localStorage.setItem('userId', '');
+    localStorage.setItem('username', '');
     navigate('/admin/login');
   };
   
@@ -57,7 +59,7 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
               sx={{ width: 24, height: 24 }}
             />
             <Typography component="p" variant="h6">
-              David Vieira
+              { localStorage.getItem('username') }
             </Typography>
           </Stack>
         </Stack>

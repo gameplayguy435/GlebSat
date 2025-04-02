@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   Box, Container, Typography, Grid2 as Grid, Card, CardContent, 
-  Paper, Button, LinearProgress, useTheme 
+  Paper, Button, LinearProgress, useTheme
 } from '@mui/material';
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 
 const HomePage = () => {
   const theme = useTheme();
+
   const [isStreaming, setIsStreaming] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState({
     dias: 0,
@@ -50,7 +51,6 @@ const HomePage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Sample data for charts
   const timeSeriesData = [
     { time: '00:00', aqi: 45, temp: 22, humidity: 65, pressure: 1012 },
     { time: '04:00', aqi: 48, temp: 21, humidity: 68, pressure: 1013 },
@@ -69,7 +69,6 @@ const HomePage = () => {
   
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
   
-  // GPS trajectory data
   const trajectoryPoints = [
     [41.0644, -8.5761559],
     [41.062, -8.579],
@@ -87,18 +86,17 @@ const HomePage = () => {
 
   return (
     <Box sx={{ minHeight: '100vh' }} className="home-container">
-      {/* Hero Section with Video and Countdown */}
       <Box
         className="hero-section"
         sx={{
           position: 'relative',
-          height: { xs: 'auto', md: '80vh' }, // Auto height on mobile, fixed height on larger screens
-          minHeight: { xs: '100vh', md: '80vh' }, // Ensure minimum height on all screens
+          height: { xs: 'auto', md: 'auto' },
+          minHeight: { xs: '100vh', md: '80vh' },
           display: 'flex',
           alignItems: 'center',
           mb: 6,
           boxShadow: 8,
-          py: { xs: 12, md: 4 } // Add vertical padding on mobile to ensure content fits
+          py: { xs: 12, md: 4 }
         }}
       >
         <Container maxWidth="xl">
@@ -169,7 +167,7 @@ const HomePage = () => {
                   overflow: 'hidden',
                   position: 'relative',
                   backdropFilter: 'blur(10px)',
-                  p: { xs: 2, sm: 3, md: 4 } // Smaller padding on mobile
+                  p: { xs: 2, sm: 3, md: 4 }
                 }}
               >
                 {isStreaming ? (
@@ -199,7 +197,7 @@ const HomePage = () => {
                     <Box sx={{ 
                       display: 'flex', 
                       justifyContent: 'center', 
-                      flexWrap: 'wrap', // Enable wrapping on small screens
+                      flexWrap: 'wrap',
                       mt: 3,
                       mb: 2
                     }}>
@@ -208,27 +206,27 @@ const HomePage = () => {
                           key={unit} 
                           sx={{ 
                             textAlign: 'center', 
-                            px: { xs: 1, sm: 2 }, // Smaller padding on mobile
-                            mb: { xs: 2, sm: 0 }, // Add margin bottom on mobile for wrapped items
-                            width: { xs: '50%', sm: 'auto' } // Take up half width on mobile, auto on larger
+                            px: { xs: 1, sm: 2 },
+                            mb: { xs: 2, sm: 0 },
+                            width: { xs: '50%', sm: 'auto' }
                           }}
                         >
                           <Paper 
                             elevation={6} 
                             className="countdown-digit"
                             sx={{
-                              p: { xs: 2, sm: 1}, // Smaller padding on mobile
+                              p: { xs: 2, sm: 1},
                               borderRadius: 2, 
-                              minWidth: { xs: '45px', sm: '60px' }, // Smaller min width on mobile
-                              mx: 'auto', // Center the paper in its container
-                              maxWidth: '90%' // Prevent horizontal overflow
+                              minWidth: { xs: '45px', sm: '60px' },
+                              mx: 'auto',
+                              maxWidth: '90%'
                             }}
                           >
                             <Typography 
                               variant="h4" 
                               fontWeight="bold"
                               sx={{ 
-                                fontSize: { xs: '1.5rem', sm: '2rem', lg: '2.125rem' } // Smaller font on mobile
+                                fontSize: { xs: '1.5rem', sm: '2rem', lg: '2.125rem' }
                               }}
                             >
                               {value.toString().padStart(2, '0')}
@@ -239,7 +237,7 @@ const HomePage = () => {
                             sx={{ 
                               mt: 1, 
                               textTransform: 'uppercase',
-                              fontSize: { xs: '0.7rem', sm: '0.875rem' } // Smaller label on mobile
+                              fontSize: { xs: '0.7rem', sm: '0.875rem' }
                             }}
                           >
                             {unit}
@@ -266,7 +264,6 @@ const HomePage = () => {
         </Typography>
         
         <Grid container spacing={3}>
-          {/* Key Metrics Cards - Keep colorful for visual distinctions */}
           <Grid size={{ xs: 12, md: 6, lg: 3 }} >
             <Card 
               component={motion.div}
@@ -274,8 +271,8 @@ const HomePage = () => {
               elevation={4} 
               sx={{ 
                 borderRadius: 2, 
-                background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)', // Keep specific colors for metrics
-                color: 'white', // White text is acceptable when on colorful background
+                background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+                color: 'white',
                 height: '100%'
               }}
               className="dashboard-card"
@@ -314,8 +311,8 @@ const HomePage = () => {
               elevation={4} 
               sx={{ 
                 borderRadius: 2, 
-                background: 'linear-gradient(135deg, #2196F3 0%, #0D47A1 100%)', // Keep specific colors for metrics
-                color: 'white', // White text is acceptable when on colorful background
+                background: 'linear-gradient(135deg, #2196F3 0%, #0D47A1 100%)',
+                color: 'white',
                 height: '100%'
               }}
               className="dashboard-card"
@@ -341,8 +338,8 @@ const HomePage = () => {
               elevation={4} 
               sx={{ 
                 borderRadius: 2, 
-                background: 'linear-gradient(135deg, #9C27B0 0%, #6A1B9A 100%)', // Keep specific colors for metrics
-                color: 'white', // White text is acceptable when on colorful background
+                background: 'linear-gradient(135deg, #9C27B0 0%, #6A1B9A 100%)',
+                color: 'white',
                 height: '100%'
               }}
               className="dashboard-card"
@@ -368,8 +365,8 @@ const HomePage = () => {
               elevation={4} 
               sx={{ 
                 borderRadius: 2, 
-                background: 'linear-gradient(135deg, #FF5722 0%, #D84315 100%)', // Keep specific colors for metrics
-                color: 'white', // White text is acceptable when on colorful background
+                background: 'linear-gradient(135deg, #FF5722 0%, #D84315 100%)',
+                color: 'white',
                 height: '100%'
               }}
               className="dashboard-card"
@@ -401,7 +398,6 @@ const HomePage = () => {
             </Card>
           </Grid>
           
-          {/* Charts */}
           <Grid size={{ xs: 12, lg: 6}}>
             <Card 
               elevation={3} 
@@ -496,7 +492,6 @@ const HomePage = () => {
             </Card>
           </Grid>
           
-          {/* GPS Trajectory Map */}
           <Grid size={{ xs: 12 }}>
             <Card 
               elevation={3} 
@@ -536,14 +531,12 @@ const HomePage = () => {
         </Grid>
       </Container>
 
-      {/* Page Sections Preview */}
       <Box sx={{ py: 8 }} className="bg-tertiary sections-preview">
         <Container maxWidth="lg">
           <Typography variant="h4" align="center" fontWeight="bold" gutterBottom mb={5} className="color-primary">
             Conheça o nosso projeto!
           </Typography>
           
-          {/* About Us Section */}
           <Box 
             component={motion.div}
             initial={{ opacity: 0, y: 50 }}
@@ -573,11 +566,11 @@ const HomePage = () => {
                   Sobre Nós
                 </Typography>
                 <Typography variant="body1" paragraph className="color-secondary">
-                  Somos uma equipa de cientistas e engenheiros apaixonados, dedicados à monitorização das condições ambientais da Terra a partir do espaço. 
+                  Somos uma equipa de estudantes ambiciosos, dedicados à monitorização das condições ambientais da Terra a partir do espaço. 
                   A nossa missão é fornecer dados precisos e em tempo real para ajudar a combater as alterações climáticas e promover práticas sustentáveis.
                 </Typography>
                 <Button 
-                  variant="outlined" 
+                  variant="contained" 
                   color="primary" 
                   endIcon={<ArrowForward />}
                   component={Link}
@@ -590,7 +583,6 @@ const HomePage = () => {
             </Grid>
           </Box>
           
-          {/* News Section */}
           <Box 
             component={motion.div}
             initial={{ opacity: 0, y: 50 }}
@@ -610,7 +602,7 @@ const HomePage = () => {
                   descobertas de análise de dados e projetos de investigação colaborativa.
                 </Typography>
                 <Button 
-                  variant="outlined" 
+                  variant="contained" 
                   color="primary" 
                   endIcon={<ArrowForward />}
                   component={Link}
@@ -638,7 +630,6 @@ const HomePage = () => {
             </Grid>
           </Box>
           
-          {/* Gallery Section */}
           <Box 
             component={motion.div}
             initial={{ opacity: 0, y: 50 }}
@@ -673,7 +664,7 @@ const HomePage = () => {
                   A nossa galeria mostra a beleza do nosso planeta e a tecnologia que usamos para o monitorizar.
                 </Typography>
                 <Button 
-                  variant="outlined" 
+                  variant="contained" 
                   color="primary" 
                   endIcon={<ArrowForward />}
                   component={Link}
@@ -686,7 +677,6 @@ const HomePage = () => {
             </Grid>
           </Box>
           
-          {/* Contact Section */}
           <Box 
             component={motion.div}
             initial={{ opacity: 0, y: 50 }}
@@ -705,7 +695,7 @@ const HomePage = () => {
                   oportunidades educativas e mais informações sobre as nossas iniciativas de monitorização ambiental.
                 </Typography>
                 <Button 
-                  variant="outlined" 
+                  variant="contained" 
                   color="primary" 
                   endIcon={<ArrowForward />}
                   component={Link}

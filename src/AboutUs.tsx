@@ -9,7 +9,6 @@ import { motion } from 'framer-motion';
 const AboutUsPage = () => {
   const theme = useTheme();
   
-  // Team members data with 4 members
   const teamMembers = [
     {
       name: "David Vieira",

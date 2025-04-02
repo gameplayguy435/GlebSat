@@ -20,8 +20,10 @@ import {
 import { styled } from '@mui/material/styles';
 import ForgotPassword from './components/ForgotPassword';
 import AppTheme from '../assets/shared-theme/AppTheme';
-import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
+// import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
+import ThemeToggle from '../../ThemeToggle';
+import { SatelliteAltRounded } from '@mui/icons-material';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -30,7 +32,7 @@ const Card = styled(MuiCard)(({ theme }) => ({
   width: '100%',
   padding: theme.spacing(4),
   gap: theme.spacing(2),
-  margin: 'auto',
+  margin: theme.spacing(2) + 'auto',
   [theme.breakpoints.up('sm')]: {
     maxWidth: '450px',
   },
@@ -43,16 +45,17 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }));
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
-  height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
   minHeight: '100%',
   padding: theme.spacing(2),
   [theme.breakpoints.up('sm')]: {
     padding: theme.spacing(4),
   },
+  position: 'relative',
+  overflow: 'auto',
   '&::before': {
     content: '""',
     display: 'block',
-    position: 'absolute',
+    position: 'fixed',
     zIndex: -1,
     inset: 0,
     backgroundImage:
@@ -106,10 +109,14 @@ const SignIn = (props: any) => {
     if (response.data.success) {
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('email', email);
-      navigate('/admin');
+      localStorage.setItem('userId', response.data.user.id);
+      localStorage.setItem('username', response.data.user.name);
+      navigate('/admin/content', { replace: true });
     } else {
       localStorage.setItem('isLoggedIn', 'false');
       localStorage.setItem('email', '');
+      localStorage.setItem('userId', '');
+      localStorage.setItem('username', '');
       alert(response.data.message);
     }
   };
@@ -153,9 +160,24 @@ const SignIn = (props: any) => {
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" justifyContent="space-between">
-        <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '3rem',
+            right: '3rem',
+            zIndex: 1100,
+            display: 'flex'
+          }}
+        >
+          <ThemeToggle />
+        </Box>
         <Card variant="outlined">
-          <SitemarkIcon />
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+            <SatelliteAltRounded />
+            <Typography variant="h4" component="h1" sx={{ color: 'text.primary' }}>
+              GlebSat
+            </Typography>
+          </Box>
           <Typography
             component="h1"
             variant="h4"
@@ -210,7 +232,7 @@ const SignIn = (props: any) => {
             </FormControl>
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
-              label="Lembrar-me"
+              label="Manter sessão iniciada"
             />
             <ForgotPassword open={open} handleClose={handleClose} />
             <Button
@@ -221,7 +243,7 @@ const SignIn = (props: any) => {
             >
               Entrar
             </Button>
-            <Link
+            {/* <Link
               component="button"
               type="button"
               onClick={handleClickOpen}
@@ -229,11 +251,11 @@ const SignIn = (props: any) => {
               sx={{ alignSelf: 'center' }}
             >
               Esqueceu-se da sua palavra passe?
-            </Link>
+            </Link> */}
           </Box>
           <Divider>ou</Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Button
+            {/* <Button
               fullWidth
               variant="outlined"
               onClick={() => alert('Entre com o Google')}
@@ -248,7 +270,7 @@ const SignIn = (props: any) => {
               startIcon={<FacebookIcon />}
             >
               Entre com o Facebook
-            </Button>
+            </Button> */}
             <Typography sx={{ textAlign: 'center' }}>
               Ainda não criou uma conta?{' '}
               <Link

@@ -34,7 +34,6 @@ const Dashboard = (props:any) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('isLoggedIn:', localStorage.getItem('isLoggedIn'));
     if (localStorage.getItem('isLoggedIn') !== 'true') {
       navigate('/admin/login', { replace: true });
     } else {
