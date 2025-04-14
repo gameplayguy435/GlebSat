@@ -1,18 +1,48 @@
 import hashlib
+import requests
 from django.shortcuts import render
 from django.contrib.auth.hashers import make_password
+from django.core.mail import EmailMessage
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import User, Token, NewsArticle, Category, Image, ImageHash
-from .serializers import UserSerializer, TokenSerializer, NewsArticleSerializer, CategorySerializer, ImageSerializer
+from .models import *
+from .serializers import *
 
 SALT = "8b4f6b2cc1868d75ef79e5cfb8779c11b6a374bf0fce05b485581bf4e1e25b96c8c2855015de8449"
 URL = "http://localhost:5173"
 
+def verify_recaptcha(recaptcha_token):
+    recaptcha_secret = '6Lf3Jg0rAAAAAAbHjR4o5pkQJzhqJNY0djK6_yzl'
+    
+    recaptcha_response = requests.post(
+        'https://www.google.com/recaptcha/api/siteverify',
+        data={
+            'secret': recaptcha_secret,
+            'response': recaptcha_token,
+        }
+    )
+    recaptcha_result = recaptcha_response.json()
+    
+    if not recaptcha_result.get('success', False) or recaptcha_result.get('score', 0) < 0.5:
+        return False
+    
+    return True
+
 class LoginView(APIView):
     def post(self, request, format=None):
+        recaptcha_token = request.data['recaptcha_token']
+        
+        if not verify_recaptcha(recaptcha_token):
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Falha na validação do reCAPTCHA.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
         email = request.data['email']
         password = request.data['password']
         hashed_password = make_password(password=password, salt=SALT)
@@ -263,8 +293,8 @@ class ImageDuplicationHandlerMixin:
 class ImageView(APIView):
     def get(self, request, format=None):
         try:
-            categories = Image.objects.all()
-            serializer = ImageSerializer(categories, many=True)
+            images = Image.objects.all()
+            serializer = ImageSerializer(images, many=True)
             return Response(
                 {
                     'success': True,
@@ -368,4 +398,106 @@ class UpdateImageView(APIView, ImageDuplicationHandlerMixin):
                     'message': 'Imagem não encontrada!',
                 },
                 status=status.HTTP_404_NOT_FOUND,
+            )
+
+class MissionView(APIView):
+    def get(self, request, format=None):
+        try:
+            missions = Mission.objects.all()
+            serializer = MissionSerializer(missions, many=True)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Missões obtidas com sucesso!',
+                    'missions': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Mission.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Missões não encontradas!',
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+class CreateMissionView(APIView):
+    def post(self, request, format=None):
+        serializer = MissionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            
+            missions = Mission.objects.all()
+            serializer = MissionSerializer(missions, many=True)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Missão inserida com sucesso!',
+                    'missions': serializer.data,
+                },
+            )
+        else:
+            message = ""
+            for key in serializer.errors:
+                message += serializer.errors[key][0]
+            return Response(
+                {
+                    'success': False,
+                    'message': message,
+                },
+                status=status.HTTP_200_OK,
+            )
+       
+class ContactView(APIView):
+    def post(self, request, format=None):
+        recaptcha_token = request.data.get('recaptcha_token', '')
+        
+        if not verify_recaptcha(recaptcha_token):
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Falha na validação do reCAPTCHA.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        name = request.data.get('name', '')
+        email = request.data.get('email', '')
+        subject = request.data.get('subject', 'Sem Assunto')
+        message = request.data.get('message', '')
+
+        if not email or not message:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'O email e a mensagem são obrigatórios.',
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            email_message = EmailMessage(
+                subject=subject,
+                body=f"Mensagem de {name}: {email}\n\n{message}",
+                from_email='canpansatpat@gmail.com',
+                to=['canpansatpat@gmail.com'],
+                reply_to=[email],
+            )
+            email_message.send()
+
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Email enviado com sucesso!',
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'message': f'Erro ao enviar o email: {str(e)}',
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

@@ -8,26 +8,72 @@ import { motion } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { SnackbarProvider, useSnackbar } from 'notistack';
+import { useReCaptchaV3 } from './services/ReCaptchaV3';
 
-const ContactsPage = () => {
+const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
+const Contacts = () => {
   const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    subject: '',
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
+  const { validateReCaptcha } = useReCaptchaV3();
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    // Here you would implement the actual form submission logic
-    console.log('Form submitted:', formData);
-    setSubmitted(true);
+
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+      enqueueSnackbar('Email inválido!', { variant: 'error' });
+      return;
+    }
+    if (!formData.subject || !formData.message) {
+      enqueueSnackbar('Preencha todos os campos!', { variant: 'error' });
+      return;
+    }
+
+    const recaptchaToken = await validateReCaptcha('contact');
+    if (!recaptchaToken) {
+      enqueueSnackbar('Erro ao validar reCAPTCHA!', { variant: 'error' });
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...formData, recaptcha_token: recaptchaToken }),
+      });
+  
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('Email enviado com sucesso!');
+        enqueueSnackbar(
+          "Email enviado com sucesso!", 
+          { variant: 'success', autoHideDuration: 3000 }
+        );
+        setSubmitted(true);
+      } else {
+        console.error('Erro ao enviar o email:', data.message);
+        enqueueSnackbar(data.message, { variant: 'error' });
+      }
+    } catch (err) {
+      console.error('Erro de conexão:', err);
+      enqueueSnackbar('Erro de conexão ao enviar o email', { variant: 'error' });
+    }
   };
 
   const fixLeafletIcon = () => {
@@ -39,18 +85,14 @@ const ContactsPage = () => {
     });
   };
   
-  const ContactsPage = () => {
-    // Add this inside your component
-    useEffect(() => {
-      fixLeafletIcon();
-    }, []);
-  }
+  useEffect(() => {
+    fixLeafletIcon();
+  }, []);
 
   const schoolPosition = [41.0644, -8.5761559];
 
   return (
     <Box sx={{ minHeight: '100vh', py: 8 }} className="contacts-container">
-      {/* Page Title - With animation */}
       <Box 
         component={motion.div}
         initial={{ opacity: 0, y: -30 }}
@@ -91,7 +133,6 @@ const ContactsPage = () => {
       
       <Container maxWidth="lg">
         <Grid container spacing={4}>
-          {/* Contact Information Card */}
           <Grid size={{ xs: 12, md: 5 }}>
             <Card 
               component={motion.div}
@@ -128,7 +169,7 @@ const ContactsPage = () => {
                   Utilize um dos nossos canais de contacto abaixo ou preencha o formulário para nos enviar uma mensagem direta.
                 </Typography>
                 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, mt: 5 }}>
                   <Box 
                     component={motion.div}
                     whileHover={{ x: 5 }}
@@ -152,7 +193,7 @@ const ContactsPage = () => {
                         Email
                       </Typography>
                       <Typography variant="body2" className="color-secondary">
-                        glebsat@gmail.com
+                        canpansatpat@gmail.com
                       </Typography>
                     </Box>
                   </Box>
@@ -205,7 +246,7 @@ const ContactsPage = () => {
                     </Box>
                     <Box>
                       <Typography variant="subtitle1" fontWeight="bold" className="color-primary">
-                        Localização
+                        Morada
                       </Typography>
                       <Typography variant="body2" className="color-secondary">
                         R. Moeiro s/n, 4415-133 Pedroso, Vila Nova de Gaia
@@ -217,7 +258,6 @@ const ContactsPage = () => {
             </Card>
           </Grid>
           
-          {/* Contact Form Card */}
           <Grid size={{ xs: 12, md: 7 }}>
             <Card 
               component={motion.div}
@@ -233,6 +273,17 @@ const ContactsPage = () => {
                 position: 'relative'
               }}
             >
+              <Box 
+                sx={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  width: '100%', 
+                  height: '8px', 
+                  bgcolor: 'primary.main' 
+                }}
+              />
+
               <CardContent sx={{ p: 4 }}>
                 <Typography variant="h4" gutterBottom fontWeight="bold" className="color-primary">
                   Envie-nos uma Mensagem
@@ -254,7 +305,6 @@ const ContactsPage = () => {
                         label="Nome"
                         variant="outlined"
                         fullWidth
-                        required
                         value={formData.name}
                         onChange={handleChange}
                         sx={{ 
@@ -285,10 +335,9 @@ const ContactsPage = () => {
                         whileHover={{ scale: 1.01 }}
                         whileFocus={{ scale: 1.01 }}
                         name="email"
-                        label="Email"
+                        label="Email *"
                         variant="outlined"
                         fullWidth
-                        required
                         type="email"
                         value={formData.email}
                         onChange={handleChange}
@@ -319,11 +368,43 @@ const ContactsPage = () => {
                         component={motion.div}
                         whileHover={{ scale: 1.01 }}
                         whileFocus={{ scale: 1.01 }}
-                        name="message"
-                        label="Mensagem"
+                        name="subject"
+                        label="Assunto *"
                         variant="outlined"
                         fullWidth
-                        required
+                        value={formData.subject}
+                        onChange={handleChange}
+                        sx={{ 
+                          '& .MuiOutlinedInput-root': { 
+                            borderRadius: 2,
+                            '& fieldset': {
+                              borderColor: 'var(--border-main)',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: 'primary.main',
+                            },
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            color: 'var(--text-secondary)',
+                          },
+                          '& .MuiInputLabel-root': {
+                            color: 'var(--text-secondary)',
+                          },
+                          mb: 2
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid size={{ xs: 12 }}>
+                      <TextField
+                        className="color-secondary"
+                        component={motion.div}
+                        whileHover={{ scale: 1.01 }}
+                        whileFocus={{ scale: 1.01 }}
+                        name="message"
+                        label="Mensagem *"
+                        variant="outlined"
+                        fullWidth
                         multiline
                         rows={6}
                         value={formData.message}
@@ -377,7 +458,6 @@ const ContactsPage = () => {
           </Grid>
         </Grid>
         
-        {/* Map Section */}
         <Box 
           component={motion.div}
           initial={{ opacity: 0, y: 50 }}
@@ -419,5 +499,21 @@ const ContactsPage = () => {
     </Box>
   );
 };
+
+const ContactsPage = () => {
+  return (
+    <SnackbarProvider
+      maxSnack={3}
+      autoHideDuration={3000}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'left',
+      }}
+      preventDuplicate
+    >
+      <Contacts />
+    </SnackbarProvider>
+  );
+}
 
 export default ContactsPage;

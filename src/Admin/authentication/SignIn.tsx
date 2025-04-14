@@ -18,12 +18,13 @@ import {
   Stack,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import ForgotPassword from './components/ForgotPassword';
-import AppTheme from '../assets/shared-theme/AppTheme';
-// import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
-import ThemeToggle from '../../ThemeToggle';
 import { SatelliteAltRounded } from '@mui/icons-material';
+import ForgotPassword from './components/ForgotPassword';
+import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
+import AppTheme from '../assets/shared-theme/AppTheme';
+import ThemeToggle from '../../ThemeToggle';
+import { SnackbarProvider, useSnackbar } from 'notistack';
+import { useReCaptchaV3 } from '../../services/ReCaptchaV3';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -70,9 +71,11 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 
 const URL = import.meta.env.VITE_BACKEND_API_URL + '/login';
 
-const SignIn = (props: any) => {
+const SignInContent = (props: any) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const { enqueueSnackbar } = useSnackbar();
+  const { validateReCaptcha } = useReCaptchaV3();
   
   const [emailError, setEmailError] = useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = useState('');
@@ -98,26 +101,39 @@ const SignIn = (props: any) => {
     if (!validateInputs()) {
       return;
     }
-    const form = e.target as HTMLFormElement;
-    const email = form.email.value;
-    const password = form.password.value;
-    const formData = {
-      email: email,
-      password: password,
-    };
-    const response = await axios.post(URL, formData);
-    if (response.data.success) {
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('email', email);
-      localStorage.setItem('userId', response.data.user.id);
-      localStorage.setItem('username', response.data.user.name);
-      navigate('/admin/content', { replace: true });
-    } else {
-      localStorage.setItem('isLoggedIn', 'false');
-      localStorage.setItem('email', '');
-      localStorage.setItem('userId', '');
-      localStorage.setItem('username', '');
-      alert(response.data.message);
+
+    const recaptchaToken = await validateReCaptcha('login');
+    if (!recaptchaToken) {
+      enqueueSnackbar('Erro ao validar reCAPTCHA!', { variant: 'error' });
+      return;
+    }
+
+    try {
+      const form = e.target as HTMLFormElement;
+      const email = form.email.value;
+      const password = form.password.value;
+      const formData = {
+        email: email,
+        password: password,
+        recaptcha_token: recaptchaToken,
+      };
+      const response = await axios.post(URL, formData);
+      if (response.data.success) {
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('email', email);
+        localStorage.setItem('userId', response.data.user.id);
+        localStorage.setItem('username', response.data.user.name);
+        navigate('/admin/content', { replace: true });
+      } else {
+        localStorage.setItem('isLoggedIn', 'false');
+        localStorage.setItem('email', '');
+        localStorage.setItem('userId', '');
+        localStorage.setItem('username', '');
+        enqueueSnackbar(response.data.message, { variant: 'error' });
+      }
+    } catch (err) {
+      console.error('Erro ao iniciar sessão!', err);
+      enqueueSnackbar(err.response.data.message, { variant: 'error' });
     }
   };
 
@@ -253,9 +269,9 @@ const SignIn = (props: any) => {
               Esqueceu-se da sua palavra passe?
             </Link> */}
           </Box>
-          <Divider>ou</Divider>
+          {/* <Divider>ou</Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* <Button
+            <Button
               fullWidth
               variant="outlined"
               onClick={() => alert('Entre com o Google')}
@@ -270,7 +286,7 @@ const SignIn = (props: any) => {
               startIcon={<FacebookIcon />}
             >
               Entre com o Facebook
-            </Button> */}
+            </Button>
             <Typography sx={{ textAlign: 'center' }}>
               Ainda não criou uma conta?{' '}
               <Link
@@ -281,10 +297,26 @@ const SignIn = (props: any) => {
                 Registe-se
               </Link>
             </Typography>
-          </Box>
+          </Box> */}
         </Card>
       </SignInContainer>
     </AppTheme>
+  );
+}
+
+const SignIn = () => {
+  return (
+    <SnackbarProvider
+      maxSnack={3}
+      autoHideDuration={3000}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'left',
+      }}
+      preventDuplicate
+    >
+      <SignInContent />
+    </SnackbarProvider>
   );
 }
 

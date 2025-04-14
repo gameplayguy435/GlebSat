@@ -1,9 +1,10 @@
 from django.contrib import admin
-from .models import User, Token, NewsArticle, Category, Image
+from .models import *
 
 admin.site.register(User)
-admin.site.register(Token)
 admin.site.register(NewsArticle)
 admin.site.register(Category)
 admin.site.register(Image)
+admin.site.register(Mission)
+admin.site.register(Record)
 

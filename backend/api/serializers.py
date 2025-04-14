@@ -1,15 +1,10 @@
 from rest_framework import serializers
-from .models import User, Token, NewsArticle, Category, Image
+from .models import *
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'name', 'email', 'password', 'created_at', 'updated_at']
-
-class TokenSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Token
-        fields = ['token', 'created_at', 'expires_at', 'user_id', 'is_used' ]
         
 class NewsArticleSerializer(serializers.ModelSerializer):
     main_image = serializers.SerializerMethodField()
@@ -33,3 +28,16 @@ class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ['id', 'name', 'image', 'category', 'news_article', 'active']
+
+class MissionSerializer(serializers.ModelSerializer):
+    data = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Mission
+        fields = ['id', 'name', 'start_date', 'end_date', 'duration', 'data']
+        
+    def get_data(self, obj):
+        data = obj.GetData()
+        if data:
+            return data
+        return None

@@ -1,7 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import LoginView, RegisterView, NewsArticleView, GetNewsArticleView, GetNewsArticleImagesView, CreateNewsArticleView, UpdateNewsArticleView, CategoryView, ImageView, CreateImageView, UpdateImageView
+from .views import *
 
 urlpatterns = [
     path('login', LoginView.as_view(), name='login'),
@@ -17,6 +17,11 @@ urlpatterns = [
     path('image/article/<int:news_article_id>', GetNewsArticleImagesView.as_view()),
     path('image/create', CreateImageView.as_view(), name='image_create'),
     path('image/update/<int:image_id>', UpdateImageView.as_view(), name='image_update'),
+    
+    path('contact', ContactView.as_view(), name='contact'),
+    
+    path('mission', MissionView.as_view(), name='mission'),
+    path('mission/create', CreateMissionView.as_view(), name='mission_create'),
 ]
 
 if settings.DEBUG:

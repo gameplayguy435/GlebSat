@@ -2,17 +2,6 @@ from django.db import models
 from django.utils import timezone
 from itertools import chain
 
-class Token(models.Model):
-    id = models.AutoField(primary_key=True)
-    token = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    user_id = models.IntegerField()
-    is_used = models.BooleanField(default=False)
-    
-    def __str__(self):
-        return self.token
-
 class User(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -74,7 +63,29 @@ class Image(models.Model):
 
     def __str__(self) -> str:
         return self.name
-    
+
 class ImageHash(models.Model):
     image = models.ForeignKey(Image, on_delete=models.CASCADE)
     hash = models.CharField(max_length=32, unique=True)
+
+class Mission(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    duration = models.DurationField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return self.name
+    
+    def GetData(self):
+        return Record.objects.filter(mission=self) or []
+
+class Record(models.Model):
+    id = models.AutoField(primary_key=True)
+    data = models.JSONField()
+    mission = models.ForeignKey(Mission, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"{self.data}"

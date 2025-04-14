@@ -3,7 +3,7 @@
 /* Dark/Light Theme */
 .theme-dark {
   --background-primary: #05070a;
-  --background-secondary: #1e293b;
+  --background-secondary: #2f3848;
   --background-tertiary: #333b4d;
   --text-primary: #f9f3f4; 
   --text-secondary: #cad5e2;
@@ -14,8 +14,8 @@
 }
 .theme-light {
   --background-primary: #fcfcfc;
-  --background-secondary: #dadee7;
-  --background-tertiary: #c1cadf;
+  --background-secondary: #cdd1db;
+  --background-tertiary: #c1c6cd;
   --text-primary: #0b0e14; 
   --text-secondary: #47536b;
   --text-disabled: #64748B; /* NOT IN USE */

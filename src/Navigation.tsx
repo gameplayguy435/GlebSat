@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, Home, FileText, Users, Mail, Newspaper, Image, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ThemeToggle from './ThemeToggle';
+import { SatelliteAltRounded } from '@mui/icons-material';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,6 +47,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2">
             <div className="text-xl font-bold">
+              <SatelliteAltRounded sx={{ mr: 1 }} />
               GlebSat
             </div>
           </div>
