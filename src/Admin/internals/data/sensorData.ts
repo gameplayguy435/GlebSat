@@ -188,16 +188,23 @@ export const demoSensorData: SensorData = {
   }
 };
 
-export const demoTrajectoryData = [
-  [41.0644, -8.5762], [41.0646, -8.5760], [41.0648, -8.5758], [41.0650, -8.5756], 
-  [41.0652, -8.5754], [41.0654, -8.5752], [41.0656, -8.5750], [41.0658, -8.5752], 
-  [41.0660, -8.5754], [41.0662, -8.5756], [41.0664, -8.5758], [41.0666, -8.5760], 
-  [41.0668, -8.5762], [41.0666, -8.5764], [41.0664, -8.5766], [41.0662, -8.5768], 
-  [41.0660, -8.5770], [41.0658, -8.5772], [41.0656, -8.5774], [41.0654, -8.5776], 
-  [41.0652, -8.5774], [41.0650, -8.5772], [41.0648, -8.5770], [41.0646, -8.5768], 
-  [41.0644, -8.5766], [41.0642, -8.5764], [41.0640, -8.5762], [41.0638, -8.5760], 
-  [41.0636, -8.5758], [41.0634, -8.5756]
-];
+export const demoTrajectoryData = (() => {
+  const center = [41.0644, -8.5762];
+  const radius = 0.002;
+  const points = 30;
+  const trajectory = [];
+  
+  for (let i = 0; i < points; i++) {
+    const angle = (i / points) * Math.PI * 2; 
+    const noise = Math.random() * 0.0003;
+    const lat = center[0] + Math.cos(angle) * radius + noise;
+    const lng = center[1] + Math.sin(angle) * radius + noise;
+    
+    trajectory.push([lat, lng]);
+  }
+  
+  return trajectory;
+})();
 
 export const demoMissionData = {
   id: 1,

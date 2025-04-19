@@ -142,3 +142,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'canpansatpat@gmail.com'
 EMAIL_HOST_PASSWORD = 'njji pkye eyel jols'
+
+TIME_ZONE = 'Europe/Lisbon'
+USE_TZ = True

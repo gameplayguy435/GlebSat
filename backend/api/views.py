@@ -1,5 +1,6 @@
 import hashlib
 import requests
+import dateutil.parser
 from django.shortcuts import render
 from django.contrib.auth.hashers import make_password
 from django.core.mail import EmailMessage
@@ -421,7 +422,29 @@ class MissionView(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
-            
+
+class GetMissionView(APIView):
+    def get(self, request, mission_id, format=None):
+        try:
+            mission = Mission.objects.get(id=mission_id)
+            serializer = MissionSerializer(mission)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Missão obtida com sucesso!',
+                    'mission': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Mission.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Missão não encontrada!',
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
 class CreateMissionView(APIView):
     def post(self, request, format=None):
         serializer = MissionSerializer(data=request.data)
@@ -447,6 +470,195 @@ class CreateMissionView(APIView):
                     'message': message,
                 },
                 status=status.HTTP_200_OK,
+            )
+
+class UpdateMissionView(APIView):
+    def post(self, request, mission_id, format=None):
+        try:
+            mission = Mission.objects.get(id=mission_id)
+            
+            # Update specific fields
+            if 'end_date' in request.data:
+                mission.end_date = request.data['end_date']
+            
+            if 'duration' in request.data:
+                # For duration, convert string format to timedelta
+                duration_str = request.data['duration']
+                if duration_str:
+                    hours, minutes, seconds = map(int, duration_str.split(':'))
+                    duration_td = timezone.timedelta(
+                        hours=hours,
+                        minutes=minutes,
+                        seconds=seconds
+                    )
+                    mission.duration = duration_td
+            
+            mission.save()
+            
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Missão atualizada com sucesso!',
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+        except Mission.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Missão não encontrada!'
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'message': f'Erro ao atualizar missão: {str(e)}'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+class MissionRecordsView(APIView):
+    def get(self, request, mission_id, format=None):
+        try:
+            mission = Mission.objects.get(id=mission_id)
+            records = Record.objects.filter(mission=mission)
+            
+            if not records:
+                return Response(
+                    {
+                        'success': True,
+                        'message': 'Nenhum registo encontrado para esta missão',
+                        'records': []
+                    },
+                    status=status.HTTP_200_OK,
+                )
+                
+            records_data = []
+            for record in records:
+                record_info = {
+                    'id': record.id,
+                    'data': record.data,
+                    'created_at': record.created_at
+                }
+                records_data.append(record_info)
+                
+            return Response(
+                {
+                    'success': True,
+                    'message': 'registos obtidos com sucesso',
+                    'records': records_data
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+        except Mission.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Missão não encontrada'
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+class ImportMissionRecordsView(APIView):
+    def post(self, request, mission_id, format=None):
+        try:
+            mission = Mission.objects.get(id=mission_id)
+            records_data = request.data.get('records', [])
+            
+            if not records_data:
+                return Response(
+                    {
+                        'success': False,
+                        'message': 'Nenhum registo fornecido para importação'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+                            
+            # Sort records by timestamp if available
+            if 'data' in records_data[0] and 'timestamp' in records_data[0]['data']:
+                sorted_records = sorted(
+                    records_data, 
+                    key=lambda x: x['data'].get('timestamp', 0)
+                )
+                
+                # Get first and last timestamp for start and end dates
+                first_timestamp = None
+                last_timestamp = None
+                
+                for record in sorted_records:
+                    if 'timestamp' in record['data']:
+                        timestamp_str = record['data']['timestamp']
+                        try:
+                            # Parse timestamp and explicitly preserve its timezone (or assume local timezone)
+                            timestamp = dateutil.parser.parse(timestamp_str)
+                            
+                            # Make timestamp timezone-aware with the correct timezone
+                            # Django uses UTC internally, so convert to the same timezone as Django's settings
+                            if timestamp.tzinfo is None:
+                                # Attach Portugal timezone (Europe/Lisbon) to the naive timestamp
+                                from django.utils import timezone
+                                timestamp = timezone.make_aware(timestamp)
+                                
+                            # Now Django won't adjust the time when storing/retrieving
+                            if first_timestamp is None or timestamp < first_timestamp:
+                                first_timestamp = timestamp
+                            if last_timestamp is None or timestamp > last_timestamp:
+                                last_timestamp = timestamp
+                        except:
+                            pass
+                
+                # For import missions, set the start_date if it's NULL
+                if mission.start_date is None and first_timestamp:
+                    mission.start_date = first_timestamp
+                    
+                # Set end_date and calculate duration
+                if last_timestamp:
+                    mission.end_date = last_timestamp
+                    
+                    if mission.start_date:
+                        duration = last_timestamp - mission.start_date
+                        mission.duration = duration
+                
+                mission.save()
+            
+            # Import records
+            imported_count = 0
+            for record_item in records_data:
+                Record.objects.create(
+                    mission=mission,
+                    data=record_item['data']
+                )
+                imported_count += 1
+                
+            return Response(
+                {
+                    'success': True,
+                    'message': f'{imported_count} registos importados com sucesso',
+                    'count': imported_count,
+                    'mission_id': mission.id
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+        except Mission.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Missão não encontrada'
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'message': f'Erro ao importar registos: {str(e)}'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
        
 class ContactView(APIView):

@@ -18,10 +18,14 @@ urlpatterns = [
     path('image/create', CreateImageView.as_view(), name='image_create'),
     path('image/update/<int:image_id>', UpdateImageView.as_view(), name='image_update'),
     
-    path('contact', ContactView.as_view(), name='contact'),
-    
     path('mission', MissionView.as_view(), name='mission'),
+    path('mission/<int:mission_id>', GetMissionView.as_view(), name='mission_get'),
     path('mission/create', CreateMissionView.as_view(), name='mission_create'),
+    path('mission/<int:mission_id>/update', UpdateMissionView.as_view(), name='mission_update'),
+    path('mission/<int:mission_id>/records', MissionRecordsView.as_view(), name='mission_records'),
+    path('mission/<int:mission_id>/records/import', ImportMissionRecordsView.as_view(), name='import_mission_records'),
+    
+    path('contact', ContactView.as_view(), name='contact'),
 ]
 
 if settings.DEBUG:

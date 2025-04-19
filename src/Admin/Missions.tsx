@@ -1,4 +1,5 @@
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect, useRef, ChangeEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Button,
@@ -8,6 +9,7 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
+    FormControlLabel,
     FormLabel,
     Stack,
     TextField,
@@ -15,12 +17,19 @@ import {
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AddchartRounded } from '@mui/icons-material';
-import { SnackbarProvider, useSnackbar } from 'notistack';
-import dayjs from 'dayjs';
+import { 
+    AddchartRounded,
+    Visibility,
+    FileUpload,
+    FileDownload,
+    Assessment
+} from '@mui/icons-material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { ptBR } from '@mui/x-data-grid/locales';
-import { useNavigate } from 'react-router-dom';
+import AntSwitch from './components/AntSwitch';
+import { SnackbarProvider, useSnackbar } from 'notistack';
+import dayjs from 'dayjs';
+import { read, utils, write } from 'xlsx';
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
@@ -41,12 +50,14 @@ const MissionsContent = () => {
     const [missions, setMissions] = useState<Mission[]>([]);
     const [currentMission, setCurrentMission] = useState<Partial<Mission>>({
         name: '',
-        duration: '',
     });
+    const [missionType, setMissionType] = useState('realtime');
 
     useEffect(() => {
         fetchMissions();
     }, []);
+
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const fetchMissions = async () => {
         try {
@@ -76,10 +87,10 @@ const MissionsContent = () => {
     };
 
     const formatDate = (dateString: string) => {
-        if (!dateString) return '';
+        if (!dateString) return 'Dados Indisponíveis';
         try {
             const date = new Date(dateString);
-            if (isNaN(date.getTime())) return 'Data inválida';
+            if (isNaN(date.getTime())) return 'Dados Indisponíveis';
             
             const time = date.toLocaleTimeString('pt-PT', { 
                 hour: '2-digit', 
@@ -96,12 +107,12 @@ const MissionsContent = () => {
             return `${time} ${formattedDate}`;
         } catch (error) {
             console.error("Error formatting date:", error);
-            return dateString;
+            return 'Dados Indisponíveis';
         }
     };
     
     const formatDuration = (duration: string) => {
-        if (!duration) return '';
+        if (!duration) return 'Dados Indisponíveis';
         
         try {
             if (duration.match(/^\d{2}:\d{2}:\d{2}$/)) {
@@ -112,7 +123,7 @@ const MissionsContent = () => {
             return duration;
         } catch (error) {
             console.error("Error formatting duration:", error);
-            return String(duration);
+            return 'Dados Indisponíveis';
         }
     };
 
@@ -140,20 +151,12 @@ const MissionsContent = () => {
             return;
         }
 
-        if (!currentMission.duration?.trim() || isNaN(Number(currentMission.duration))) {
-            enqueueSnackbar('A duração da missão deve ser um número válido', { variant: 'error' });
-            return;
-        }
-
-        const startDate = dayjs();
-        const durationInSeconds = Number(currentMission.duration);
-        const endDate = startDate.add(durationInSeconds, 'second');
-
         const newMission = {
             name: currentMission.name,
-            start_date: startDate.toISOString(),
-            end_date: endDate.toISOString(),
-            duration: durationInSeconds,
+            start_date: missionType === 'realtime' ? dayjs().toISOString() : null,
+            end_date: null,
+            duration: null,
+            is_realtime: missionType === 'realtime'
         };
 
         try {
@@ -165,9 +168,14 @@ const MissionsContent = () => {
             const data = await response.json();
 
             if (data.success) {
+                setDialogOpen(false);
                 enqueueSnackbar('Missão criada com sucesso!', { variant: 'success' });
                 const insertedMission = data.missions[data.missions.length - 1];
-                navigate(`/admin/missions/${insertedMission.id}`, { replace: true });
+                if (missionType === 'realtime') {
+                    navigate(`/admin/missions/${insertedMission.id}`, { replace: true });
+                } else {
+                    fetchMissions();
+                }
             } else {
                 console.error('Erro ao criar a missão:', data.message);
                 enqueueSnackbar('Erro ao criar a missão', { variant: 'error' });
@@ -176,6 +184,352 @@ const MissionsContent = () => {
             console.error('Erro ao criar a missão:', err);
             enqueueSnackbar('Erro de conexão ao criar a missão', { variant: 'error' });
         }
+    };
+
+    const handleImportMission = (id: number) => {
+        const mission = missions.find(m => m.id === id);
+        if (mission && mission.end_date && mission.duration) {
+            enqueueSnackbar(
+                'Não é possível importar dados em missões concluídas.', 
+                { variant: 'warning' }
+            );
+            return;
+        }
+        
+        fileInputRef.current.dataset.missionId = id.toString();
+        fileInputRef.current.click();
+    };
+    
+    const handleExportMission = async (id: number) => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${API_URL}/mission/${id}/records`);
+            const result = await response.json();
+            
+            if (result.success && result.records && result.records.length > 0) {
+                const recordsData = result.records.map(record => record.data);
+                
+                // Convert to worksheet
+                const worksheet = utils.json_to_sheet(recordsData);
+                const workbook = utils.book_new();
+                utils.book_append_sheet(workbook, worksheet, "Records");
+                
+                // Generate and download the file
+                const mission = missions.find(m => m.id === id);
+                const fileName = `mission_${id}_${mission?.name.replace(/\s+/g, '_').toLowerCase() || 'export'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+                
+                // Write and download
+                const excelBuffer = write(workbook, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                
+                // Create download link and trigger download
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                enqueueSnackbar(`${recordsData.length} registos exportados com sucesso!`, { 
+                    variant: 'success' 
+                });
+            } else {
+                enqueueSnackbar('Nenhum dado encontrado para exportar', { variant: 'warning' });
+            }
+        } catch (error) {
+            console.error('Error exporting mission data:', error);
+            enqueueSnackbar(`Erro ao exportar dados: ${error.message}`, { variant: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const handleCreateReport = async (id: number) => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${API_URL}/mission/${id}/records`);
+            const result = await response.json();
+            
+            if (result.success && result.records && result.records.length > 0) {
+                // Get mission details
+                const missionResponse = await fetch(`${API_URL}/mission/${id}`);
+                const missionData = await missionResponse.json();
+                
+                if (!missionData.success) {
+                    throw new Error('Failed to fetch mission details');
+                }
+                
+                const mission = missionData.mission;
+                const recordsData = result.records.map(record => record.data);
+                
+                // Process data for report
+                const processedData = processDataForReport(recordsData, mission);
+                
+                // Generate PDF report using jspdf and jspdf-autotable
+                await generatePDFReport(processedData, mission);
+                
+                enqueueSnackbar('Relatório gerado com sucesso!', { variant: 'success' });
+            } else {
+                enqueueSnackbar('Nenhum dado encontrado para gerar relatório', { variant: 'warning' });
+            }
+        } catch (error) {
+            console.error('Error generating report:', error);
+            enqueueSnackbar(`Erro ao gerar relatório: ${error.message}`, { variant: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+        try {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const missionId = fileInputRef.current.dataset.missionId;
+            if (!missionId) {
+                enqueueSnackbar('ID da missão não encontrado', { variant: 'error' });
+                return;
+            }
+            
+            setLoading(true);
+            const reader = new FileReader();
+            
+            reader.onload = async (e) => {
+                try {
+                    let data = [];
+                    
+                    if (file.name.endsWith('.csv')) {
+                        // Parse CSV
+                        const text = e.target?.result as string;
+                        const lines = text.split('\n');
+                        const headers = lines[0].split(',').map(h => h.trim());
+                        
+                        // Skip header row (first line)
+                        for (let i = 1; i < lines.length; i++) {
+                            if (!lines[i].trim()) continue; // Skip empty lines
+                            
+                            const values = lines[i].split(',').map(v => v.trim());
+                            const record = {};
+                            
+                            headers.forEach((header, index) => {
+                                if (header !== 'timestamp' && values[index]) {
+                                    record[header] = parseFloat(values[index]);
+                                } else {
+                                    record[header] = values[index];
+                                }
+                            });
+                            
+                            data.push(record);
+                        }
+                    } else if (file.name.endsWith('.xlsx')) {
+                        // Parse XLSX
+                        const buffer = e.target?.result;
+                        const workbook = read(buffer, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        data = utils.sheet_to_json(worksheet);
+                    } else {
+                        throw new Error('Formato de ficheiro não suportado. Use CSV ou XLSX.');
+                    }
+                    
+                    // Send data to backend
+                    if (data.length > 0) {                        
+                        const payload = data.map(record => ({
+                            mission_id: missionId,
+                            data: record
+                        }));
+                        
+                        const response = await fetch(`${API_URL}/mission/${missionId}/records/import`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ records: payload }),
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            enqueueSnackbar(`${data.length} registos importados com sucesso!`, { 
+                                variant: 'success' 
+                            });
+                            
+                            await fetchMissions();
+                            
+                            const mission = missions.find(m => m.id.toString() === missionId);
+                            if (mission && mission.start_date === null) {
+                                navigate(`/admin/missions/${missionId}`, { replace: true });
+                            }
+                        } else {
+                            enqueueSnackbar(`Erro: ${result.message}`, { variant: 'error' });
+                        }
+                    } else {
+                        enqueueSnackbar('Nenhum dado encontrado no ficheiro', { variant: 'warning' });
+                    }
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    enqueueSnackbar(`Erro ao processar o ficheiro: ${error.message}`, { 
+                        variant: 'error' 
+                    });
+                } finally {
+                    setLoading(false);
+                    // Clear the file input
+                    event.target.value = '';
+                }
+            };
+            
+            reader.onerror = () => {
+                setLoading(false);
+                enqueueSnackbar('Erro ao ler o ficheiro', { variant: 'error' });
+            };
+            
+            // Read the file
+            if (file.name.endsWith('.csv')) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        } catch (error) {
+            console.error('Error handling file upload:', error);
+            enqueueSnackbar(`Erro: ${error.message}`, { variant: 'error' });
+            setLoading(false);
+        }
+    };
+
+    const processDataForReport = (records, mission) => {
+        // Calculate statistics for each sensor
+        const stats = {
+            temperature: calculateStats(records.map(r => r.temperature_c)),
+            pressure: calculateStats(records.map(r => r.pressure_hpa)),
+            humidity: calculateStats(records.map(r => r.humidity_percent)),
+            altitude: calculateStats(records.map(r => r.altitude_m)),
+            co2: calculateStats(records.map(r => r.co2_ppm)),
+            particles: calculateStats(records.map(r => r.particles_ug_m3)),
+        };
+        
+        return {
+            mission,
+            stats,
+            records
+        };
+    };
+
+    const calculateStats = (values) => {
+        if (!values || values.length === 0 || values.some(v => v === undefined)) {
+            return { min: 'N/A', max: 'N/A', avg: 'N/A', start: 'N/A', end: 'N/A', change: 'N/A' };
+        }
+        
+        const validValues = values.filter(v => v !== undefined);
+        const min = Math.min(...validValues);
+        const max = Math.max(...validValues);
+        const sum = validValues.reduce((a, b) => a + b, 0);
+        const avg = sum / validValues.length;
+        const start = validValues[0];
+        const end = validValues[validValues.length - 1];
+        const change = ((end - start) / start * 100).toFixed(2);
+        
+        return { min, max, avg, start, end, change: `${change}%` };
+    };
+
+    const generatePDFReport = async (data, mission) => {
+        // We'll need to add jspdf and jspdf-autotable to the project
+        // npm install jspdf jspdf-autotable
+        
+        // This is just a placeholder for the implementation
+        // You would need to import jspdf and autotable and implement this properly
+        
+        // Create a PDF document
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(20);
+        doc.text(`Relatório da Missão: ${mission.name}`, 20, 20);
+        
+        // Add mission details
+        doc.setFontSize(12);
+        doc.text(`ID da Missão: ${mission.id}`, 20, 30);
+        doc.text(`Início: ${new Date(mission.start_date).toLocaleString()}`, 20, 40);
+        doc.text(`Fim: ${mission.end_date ? new Date(mission.end_date).toLocaleString() : 'Em progresso'}`, 20, 50);
+        
+        // Add sensor statistics
+        doc.text('Estatísticas dos Sensores:', 20, 70);
+        
+        // Temperature stats
+        const tableData = [
+            ['Sensor', 'Mínimo', 'Máximo', 'Média', 'Início', 'Fim', 'Variação'],
+            ['Temperatura (°C)', 
+            data.stats.temperature.min.toFixed(1), 
+            data.stats.temperature.max.toFixed(1), 
+            data.stats.temperature.avg.toFixed(1),
+            data.stats.temperature.start.toFixed(1),
+            data.stats.temperature.end.toFixed(1),
+            data.stats.temperature.change
+            ],
+            ['Pressão (hPa)', 
+            data.stats.pressure.min.toFixed(1), 
+            data.stats.pressure.max.toFixed(1), 
+            data.stats.pressure.avg.toFixed(1),
+            data.stats.pressure.start.toFixed(1),
+            data.stats.pressure.end.toFixed(1),
+            data.stats.pressure.change
+            ],
+            ['Humidade (%)', 
+            data.stats.humidity.min.toFixed(1), 
+            data.stats.humidity.max.toFixed(1), 
+            data.stats.humidity.avg.toFixed(1),
+            data.stats.humidity.start.toFixed(1),
+            data.stats.humidity.end.toFixed(1),
+            data.stats.humidity.change
+            ],
+            ['Altitude (m)', 
+            data.stats.altitude.min.toFixed(1), 
+            data.stats.altitude.max.toFixed(1), 
+            data.stats.altitude.avg.toFixed(1),
+            data.stats.altitude.start.toFixed(1),
+            data.stats.altitude.end.toFixed(1),
+            data.stats.altitude.change
+            ],
+            ['CO₂ (ppm)', 
+            data.stats.co2.min.toFixed(1), 
+            data.stats.co2.max.toFixed(1), 
+            data.stats.co2.avg.toFixed(1),
+            data.stats.co2.start.toFixed(1),
+            data.stats.co2.end.toFixed(1),
+            data.stats.co2.change
+            ],
+            ['Partículas (µg/m³)', 
+            data.stats.particles.min.toFixed(1), 
+            data.stats.particles.max.toFixed(1), 
+            data.stats.particles.avg.toFixed(1),
+            data.stats.particles.start.toFixed(1),
+            data.stats.particles.end.toFixed(1),
+            data.stats.particles.change
+            ]
+        ];
+        
+        // Generate the table
+        doc.autoTable({
+            head: [tableData[0]],
+            body: tableData.slice(1),
+            startY: 80,
+            theme: 'grid',
+            styles: {
+                cellPadding: 3,
+                fontSize: 10,
+                valign: 'middle'
+            },
+            headStyles: {
+                fillColor: [63, 81, 181],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold'
+            }
+        });
+        
+        // Save the PDF with mission name and date
+        const fileName = `report_mission_${mission.id}_${mission.name.replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(fileName);
     };
 
     if (loading) {
@@ -220,23 +574,112 @@ const MissionsContent = () => {
         {
             field: 'options',
             headerName: 'Opções',
-            minWidth: 120,
-            flex: 2,
+            minWidth: 200,
+            flex: 1.2,
             sortable: false,
             filterable: false,
             renderCell: (params) => (
-                <Button
-                    variant="outlined"
-                    size="small"
-                    sx={{ textTransform: 'none' }}
-                    onClick={() => {
-                        console.log(`Options for mission ${params.row.id}`);
+                <Stack 
+                    direction="row" 
+                    spacing={1}
+                    sx={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        marginRight: 1,
+                        height: '100%' 
                     }}
                 >
-                    Opções
-                </Button>
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => navigate(`/admin/missions/${params.row.id}`)}
+                        sx={{
+                            minWidth: '36px',
+                            width: '36px',
+                            height: '36px',
+                            padding: 0,
+                            boxShadow: 2,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            '&:hover': {
+                                bgcolor: '#64b5f6',
+                                border: '1px solid #1565c0',
+                            }
+                        }}
+                    >
+                        <Visibility fontSize="small" />
+                    </Button>
+                    
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleImportMission(params.row.id)}
+                        sx={{
+                            minWidth: '36px',
+                            width: '36px',
+                            height: '36px',
+                            padding: 0,
+                            boxShadow: 2,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            '&:hover': {
+                                bgcolor: '#81c784',
+                                border: '1px solid #1b5e20',
+                            }
+                        }}
+                    >
+                        <FileUpload fontSize="small" />
+                    </Button>
+                    
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleExportMission(params.row.id)}
+                        sx={{
+                            minWidth: '36px',
+                            width: '36px',
+                            height: '36px',
+                            padding: 0,
+                            boxShadow: 2,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            '&:hover': {
+                                bgcolor: '#81c784',
+                                border: '1px solid #1b5e20',
+                            }
+                        }}
+                    >
+                        <FileDownload fontSize="small" />
+                    </Button>
+                    
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleCreateReport(params.row.id)}
+                        sx={{
+                            minWidth: '36px',
+                            width: '36px',
+                            height: '36px',
+                            padding: 0,
+                            boxShadow: 2,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            '&:hover': {
+                                bgcolor: '#ef5350',
+                                border: '1px solid #b71c1c',
+                            }
+                        }}
+                    >
+                        <Assessment fontSize="small" />
+                    </Button>
+                </Stack>
             ),
-        },
+        }
     ];
 
     return (
@@ -311,7 +754,7 @@ const MissionsContent = () => {
                         borderColor: 'divider',
                     }}
                 >
-                    Iniciar Missão
+                    Nova Missão
                 </DialogTitle>
                 <DialogContent sx={{ px: 4, py: 3 }}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -347,34 +790,35 @@ const MissionsContent = () => {
 
                             <FormControl>
                                 <FormLabel
-                                    htmlFor="duration"
+                                    htmlFor="missionType"
                                     sx={{
                                         mb: 1,
                                         fontWeight: 500,
                                         fontSize: '0.875rem',
                                     }}
                                 >
-                                    Duração (segundos)
+                                    Missão em Tempo Real
                                 </FormLabel>
-                                <TextField
-                                    id="duration"
-                                    type="number"
-                                    name="duration"
-                                    required
-                                    fullWidth
-                                    placeholder="60 segundos"
-                                    variant="outlined"
-                                    value={currentMission.duration || ''}
-                                    onChange={handleInputChange}
-                                    InputProps={{
-                                        inputProps: { step: 15, min: 0, max: 300 },
-                                    }}
+                                <FormControlLabel
                                     sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1,
-                                        },
+                                        '& .MuiFormControlLabel-label': {
+                                            fontSize: '0.875rem'
+                                        }
                                     }}
+                                    control={
+                                        <AntSwitch 
+                                            checked={missionType === 'realtime'} 
+                                            onChange={(e) => setMissionType(e.target.checked ? 'realtime' : 'import')}
+                                            sx={{ mr: 3.5, left: 15 }}
+                                        />
+                                    }
                                 />
+                                
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                                    {missionType === 'realtime' 
+                                        ? 'A missão será iniciada imediatamente e serão recebidos dados em tempo real.'
+                                        : 'A missão ficará disponível para importação de dados. As datas e duração serão definidas a partir dos dados importados.'}
+                                </Typography>
                             </FormControl>
                         </Stack>
                     </LocalizationProvider>
@@ -414,10 +858,17 @@ const MissionsContent = () => {
                             fontWeight: 'normal',
                         }}
                     >
-                        Iniciar
+                        {missionType === 'realtime' ? 'Iniciar' : 'Criar'}
                     </Button>
                 </DialogActions>
             </Dialog>
+            <input 
+                type="file"
+                accept=".csv,.xlsx"
+                onChange={handleFileUpload}
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+            />
         </Box>
     );
 };

@@ -21,6 +21,7 @@ import MainGrid from './Admin/MainGrid';
 import ManageContent from './Admin/ManageContent';
 import Missions from './Admin/Missions';
 import ViewMissions from './Admin/ViewMissions';
+import DataAnalysis from './Admin/DataAnalysis';
 
 
 function App() {
@@ -51,10 +52,10 @@ function App() {
 					<Route path="/admin" element={
 						<Dashboard />
 					}>
-						<Route path="" element={<MainGrid />} />
+						<Route path="" element={<DataAnalysis/>} />
 						<Route path="content" element={<ManageContent />} />
 						<Route path="missions" element={<Missions />} />
-						<Route path="missions/:id" element={<ViewMissions />} />
+						<Route path="missions/:missionId" element={<ViewMissions />} />
 					</Route>
 					
 					{/* Front-End Routes */}

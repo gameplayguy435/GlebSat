@@ -1,11 +1,10 @@
 import { useTheme } from '@mui/material/styles';
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
-import { LineChart, areaElementClasses } from '@mui/x-charts/LineChart';
+import { LineChart } from '@mui/x-charts/LineChart';
 import { styled } from '@mui/material/styles';
 
 export interface SensorChartProps {
@@ -21,7 +20,6 @@ export interface SensorChartProps {
   icon?: React.ReactNode;
   minValue?: number;
   maxValue?: number;
-  tickInterval?: number;
 }
 
 const SensorCard = styled(Card)(({ theme }) => ({
@@ -57,9 +55,8 @@ export default function SensorChart({
   icon,
   minValue,
   maxValue,
-  tickInterval = 10,
 }: SensorChartProps) {
-  const theme = useTheme();
+  // const theme = useTheme();
   
   const getTrendColor = () => {
     switch (trend) {
@@ -77,24 +74,6 @@ export default function SensorChart({
   
   const gradientId = `${title.toLowerCase().replace(/\s+/g, '-')}-gradient-${Math.random().toString(36).substring(2, 9)}`;
   
-  const generateYAxisTicks = () => {
-    if (!tickInterval) return undefined;
-    
-    const ticks = [];
-    let current = min;
-    const interval = Math.floor(max-min) / 5;
-    while (current <= max && current >= min) {
-      ticks.push(current);
-      current += tickInterval;
-    }
-    console.log(ticks);
-    return ticks;
-  };
-
-  const generateXAxisTicks = () => {
-    return (index: number) => index % 30 === 0;
-  };
-  
   const formatTimeLabel = (label: string) => {
     const seconds = parseInt(label.replace('s', '')) + 1;
     if (seconds % 60 === 0) {
@@ -109,8 +88,6 @@ export default function SensorChart({
       return `${min}m ${sec}s`;
     }
   };
-
-  const yAxisTicks = generateYAxisTicks();
 
   return (
     <SensorCard variant="outlined">
@@ -145,7 +122,7 @@ export default function SensorChart({
             xAxis={[{
               data: timeLabels,
               scaleType: 'band',
-              tickInterval: (index, i) => (i + 1) % 30 === 0,
+              tickInterval: (_, i) => (i + 1) % 30 === 0,
               valueFormatter: formatTimeLabel
             }]}
             yAxis={[{
@@ -165,7 +142,7 @@ export default function SensorChart({
             height={170}
             margin={{ left: 40, right: 10, top: 10, bottom: 30 }}
             grid={{ 
-              horizontal: { strokeDasharray: '3 3' },
+              horizontal: true,
               vertical: false 
             }}
             sx={{

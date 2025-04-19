@@ -30,14 +30,6 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'image', 'category', 'news_article', 'active']
 
 class MissionSerializer(serializers.ModelSerializer):
-    data = serializers.SerializerMethodField()
-    
     class Meta:
         model = Mission
-        fields = ['id', 'name', 'start_date', 'end_date', 'duration', 'data']
-        
-    def get_data(self, obj):
-        data = obj.GetData()
-        if data:
-            return data
-        return None
+        fields = ['id', 'name', 'start_date', 'end_date', 'duration', 'is_realtime']

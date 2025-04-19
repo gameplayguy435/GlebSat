@@ -71,15 +71,13 @@ class ImageHash(models.Model):
 class Mission(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    start_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     duration = models.DurationField(null=True, blank=True)
+    is_realtime = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.name
-    
-    def GetData(self):
-        return Record.objects.filter(mission=self) or []
 
 class Record(models.Model):
     id = models.AutoField(primary_key=True)
