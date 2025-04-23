@@ -30,6 +30,10 @@ import AntSwitch from './components/AntSwitch';
 import { SnackbarProvider, useSnackbar } from 'notistack';
 import dayjs from 'dayjs';
 import { read, utils, write } from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { autoTable } from 'jspdf-autotable';
+import { generateMissionReport } from './services/ReportGenerator';
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
@@ -144,6 +148,14 @@ const MissionsContent = () => {
             [name]: value,
         }));
     };
+    
+    const handleOpenMission = (mission: Mission) => {
+        if (mission.start_date === null) {
+            enqueueSnackbar('Dados Indisponíveis', { variant: 'error' });
+        } else {
+            navigate(`/admin/missions/${mission.id}`);
+        }
+    }
 
     const handleSave = async () => {
         if (!currentMission.name?.trim()) {
@@ -247,37 +259,37 @@ const MissionsContent = () => {
     
     const handleCreateReport = async (id: number) => {
         try {
-            setLoading(true);
-            const response = await fetch(`${API_URL}/mission/${id}/records`);
-            const result = await response.json();
+          setLoading(true);
+          const response = await fetch(`${API_URL}/mission/${id}/records`);
+          const result = await response.json();
+          
+          if (result.success && result.records && result.records.length > 0) {
+            // Get mission details
+            const missionResponse = await fetch(`${API_URL}/mission/${id}`);
+            const missionData = await missionResponse.json();
             
-            if (result.success && result.records && result.records.length > 0) {
-                // Get mission details
-                const missionResponse = await fetch(`${API_URL}/mission/${id}`);
-                const missionData = await missionResponse.json();
-                
-                if (!missionData.success) {
-                    throw new Error('Failed to fetch mission details');
-                }
-                
-                const mission = missionData.mission;
-                const recordsData = result.records.map(record => record.data);
-                
-                // Process data for report
-                const processedData = processDataForReport(recordsData, mission);
-                
-                // Generate PDF report using jspdf and jspdf-autotable
-                await generatePDFReport(processedData, mission);
-                
-                enqueueSnackbar('Relatório gerado com sucesso!', { variant: 'success' });
-            } else {
-                enqueueSnackbar('Nenhum dado encontrado para gerar relatório', { variant: 'warning' });
+            if (!missionData.success) {
+              throw new Error('Failed to fetch mission details');
             }
+            
+            const mission = missionData.mission;
+            const recordsData = result.records.map(record => record.data);
+            
+            // Process data for report
+            const processedData = processDataForReport(recordsData, mission);
+            
+            // Generate PDF report
+            const fileName = generateMissionReport(processedData);
+            
+            enqueueSnackbar(`Relatório gerado com sucesso: ${fileName}`, { variant: 'success' });
+          } else {
+            enqueueSnackbar('Nenhum dado encontrado para gerar relatório', { variant: 'warning' });
+          }
         } catch (error) {
-            console.error('Error generating report:', error);
-            enqueueSnackbar(`Erro ao gerar relatório: ${error.message}`, { variant: 'error' });
+          console.error('Error generating report:', error);
+          enqueueSnackbar(`Erro ao gerar relatório: ${error.message}`, { variant: 'error' });
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
     };
 
@@ -593,7 +605,7 @@ const MissionsContent = () => {
                     <Button
                         variant="contained"
                         size="small"
-                        onClick={() => navigate(`/admin/missions/${params.row.id}`)}
+                        onClick={() => handleOpenMission(params.row)}
                         sx={{
                             minWidth: '36px',
                             width: '36px',
@@ -606,10 +618,10 @@ const MissionsContent = () => {
                             '&:hover': {
                                 bgcolor: '#64b5f6',
                                 border: '1px solid #1565c0',
-                            }
+                            },
                         }}
                     >
-                        <Visibility fontSize="small" />
+                        <Visibility fontSize="small" fill="black" />
                     </Button>
                     
                     <Button

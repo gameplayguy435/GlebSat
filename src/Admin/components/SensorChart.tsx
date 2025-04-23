@@ -46,7 +46,7 @@ export default function SensorChart({
   title,
   value,
   unit,
-  interval = 'Atualizado a cada segundo',
+  interval = 'Atualizado a cada segundo da missão',
   trend,
   trendLabel,
   data,
