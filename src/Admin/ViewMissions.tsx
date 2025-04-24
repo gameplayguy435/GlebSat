@@ -293,32 +293,32 @@ export default function ViewMissions() {
     };
     
     // Set current values and trends
-    temperature.current = temperature.series.length > 0 ? temperature.series[temperature.series.length - 1].toFixed(1) : '0';
+    temperature.current = temperature.series.length > 0 ? temperature.series[temperature.series.length - 1].toFixed(1).replace('.', ',') : '0';
     const tempTrend = calculateTrend(temperature.series);
     temperature.trend = tempTrend.trend;
     temperature.trendLabel = tempTrend.trendLabel;
     
-    pressure.current = pressure.series.length > 0 ? pressure.series[pressure.series.length - 1].toFixed(1) : '0';
+    pressure.current = pressure.series.length > 0 ? pressure.series[pressure.series.length - 1].toFixed(1).replace('.', ',') : '0';
     const pressureTrend = calculateTrend(pressure.series);
     pressure.trend = pressureTrend.trend;
     pressure.trendLabel = pressureTrend.trendLabel;
     
-    humidity.current = humidity.series.length > 0 ? humidity.series[humidity.series.length - 1].toFixed(0) : '0';
+    humidity.current = humidity.series.length > 0 ? humidity.series[humidity.series.length - 1].toFixed(0).replace('.', ',') : '0';
     const humidityTrend = calculateTrend(humidity.series);
     humidity.trend = humidityTrend.trend;
     humidity.trendLabel = humidityTrend.trendLabel;
     
-    altitude.current = altitude.series.length > 0 ? altitude.series[altitude.series.length - 1].toFixed(0) : '0';
+    altitude.current = altitude.series.length > 0 ? altitude.series[altitude.series.length - 1].toFixed(0).replace('.', ',') : '0';
     const altitudeTrend = calculateTrend(altitude.series);
     altitude.trend = altitudeTrend.trend;
     altitude.trendLabel = altitudeTrend.trendLabel;
     
-    co2.current = co2.series.length > 0 ? co2.series[co2.series.length - 1].toFixed(0) : '0';
+    co2.current = co2.series.length > 0 ? co2.series[co2.series.length - 1].toFixed(0).replace('.', ',') : '0';
     const co2Trend = calculateTrend(co2.series);
     co2.trend = co2Trend.trend;
     co2.trendLabel = co2Trend.trendLabel;
     
-    particles.current = particles.series.length > 0 ? particles.series[particles.series.length - 1].toFixed(1) : '0';
+    particles.current = particles.series.length > 0 ? particles.series[particles.series.length - 1].toFixed(1).replace('.', ',') : '0';
     const particlesTrend = calculateTrend(particles.series);
     particles.trend = particlesTrend.trend;
     particles.trendLabel = particlesTrend.trendLabel;
@@ -343,17 +343,16 @@ export default function ViewMissions() {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'Dados indisponíveis';
 
-      const time = date.toLocaleTimeString('pt-PT', { 
+      const fullDate = date.toLocaleTimeString('pt-PT', { 
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
         hour: '2-digit', 
         minute: '2-digit', 
         second: '2-digit' 
       });
-      
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      
-      return `${time} ${day}-${month}-${year}`;
+
+      return fullDate;
     } catch (error) {
       console.error("Error formatting date:", error);
       return 'Dados indisponíveis';

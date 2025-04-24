@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Satellite, Github, Twitter, Mail } from 'lucide-react';
+import { Github, Twitter, Mail } from 'lucide-react';
+import { SatelliteAltRounded } from '@mui/icons-material';
 
 const Footer = () => {
   const navigationLinks = [
@@ -20,7 +21,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Satellite className="text-blue-400" />
+              <SatelliteAltRounded sx={{ mr: 1 }}/>
               <span className="text-xl font-bold">GlebSat</span>
             </div>
             <p className="text-sm">

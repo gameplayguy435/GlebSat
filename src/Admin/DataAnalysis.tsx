@@ -445,12 +445,12 @@ export default function DataAnalysis() {
 								<Typography variant="body2">
 									Data: {sameDay ? 
 									new Date(mission.start_date).toLocaleDateString('pt-PT', {
-										day: '2-digit', month: '2-digit', year: 'numeric'
+										day: 'numeric', month: 'long', year: 'numeric'
 									}) :
 									`${new Date(mission.start_date).toLocaleDateString('pt-PT', {
-										day: '2-digit', month: '2-digit', year: 'numeric'
+										day: 'numeric', month: 'long', year: 'numeric'
 									})} - ${new Date(mission.end_date).toLocaleDateString('pt-PT', {
-										day: '2-digit', month: '2-digit', year: 'numeric'
+										day: 'numeric', month: 'long', year: 'numeric'
 									})}`
 									}
 								</Typography>

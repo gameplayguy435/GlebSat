@@ -14,8 +14,8 @@ import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 import { useLocation } from 'react-router-dom';
 
 const mainListItems = [
-  { text: 'Gestão de Conteúdo', icon: <DashboardCustomizeRoundedIcon />, href: '/admin/content' },
   { text: 'Análise de Dados', icon: <AnalyticsRoundedIcon />, href: '/admin' },
+  { text: 'Gestão de Conteúdo', icon: <DashboardCustomizeRoundedIcon />, href: '/admin/content' },
   { text: 'Missões', icon: <AssignmentRoundedIcon />, href: '/admin/missions' },
   // { text: 'Tasks', icon: <AssignmentRoundedIcon />, href: '/admin/tasks' },
 ];

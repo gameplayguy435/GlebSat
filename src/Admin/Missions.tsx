@@ -30,9 +30,6 @@ import AntSwitch from './components/AntSwitch';
 import { SnackbarProvider, useSnackbar } from 'notistack';
 import dayjs from 'dayjs';
 import { read, utils, write } from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { autoTable } from 'jspdf-autotable';
 import { generateMissionReport } from './services/ReportGenerator';
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -96,19 +93,16 @@ const MissionsContent = () => {
             const date = new Date(dateString);
             if (isNaN(date.getTime())) return 'Dados Indisponíveis';
             
-            const time = date.toLocaleTimeString('pt-PT', { 
+            const formattedDate = date.toLocaleTimeString('pt-PT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
                 hour: '2-digit', 
                 minute: '2-digit', 
                 second: '2-digit' 
             });
-            
-            const day = date.getDate().toString().padStart(2, '0');
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const year = date.getFullYear();
-            
-            const formattedDate = `${day}-${month}-${year}`;
 
-            return `${time} ${formattedDate}`;
+            return formattedDate;
         } catch (error) {
             console.error("Error formatting date:", error);
             return 'Dados Indisponíveis';
@@ -228,7 +222,7 @@ const MissionsContent = () => {
                 
                 // Generate and download the file
                 const mission = missions.find(m => m.id === id);
-                const fileName = `mission_${id}_${mission?.name.replace(/\s+/g, '_').toLowerCase() || 'export'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+                const fileName = `missao_${mission?.name.replace(/\s+/g, '_').toLowerCase() || 'export'}_${new Date().toISOString().split('T')[0]}.xlsx`;
                 
                 // Write and download
                 const excelBuffer = write(workbook, { bookType: 'xlsx', type: 'array' });
@@ -441,107 +435,7 @@ const MissionsContent = () => {
         const end = validValues[validValues.length - 1];
         const change = ((end - start) / start * 100).toFixed(2);
         
-        return { min, max, avg, start, end, change: `${change}%` };
-    };
-
-    const generatePDFReport = async (data, mission) => {
-        // We'll need to add jspdf and jspdf-autotable to the project
-        // npm install jspdf jspdf-autotable
-        
-        // This is just a placeholder for the implementation
-        // You would need to import jspdf and autotable and implement this properly
-        
-        // Create a PDF document
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        // Add title
-        doc.setFontSize(20);
-        doc.text(`Relatório da Missão: ${mission.name}`, 20, 20);
-        
-        // Add mission details
-        doc.setFontSize(12);
-        doc.text(`ID da Missão: ${mission.id}`, 20, 30);
-        doc.text(`Início: ${new Date(mission.start_date).toLocaleString()}`, 20, 40);
-        doc.text(`Fim: ${mission.end_date ? new Date(mission.end_date).toLocaleString() : 'Em progresso'}`, 20, 50);
-        
-        // Add sensor statistics
-        doc.text('Estatísticas dos Sensores:', 20, 70);
-        
-        // Temperature stats
-        const tableData = [
-            ['Sensor', 'Mínimo', 'Máximo', 'Média', 'Início', 'Fim', 'Variação'],
-            ['Temperatura (°C)', 
-            data.stats.temperature.min.toFixed(1), 
-            data.stats.temperature.max.toFixed(1), 
-            data.stats.temperature.avg.toFixed(1),
-            data.stats.temperature.start.toFixed(1),
-            data.stats.temperature.end.toFixed(1),
-            data.stats.temperature.change
-            ],
-            ['Pressão (hPa)', 
-            data.stats.pressure.min.toFixed(1), 
-            data.stats.pressure.max.toFixed(1), 
-            data.stats.pressure.avg.toFixed(1),
-            data.stats.pressure.start.toFixed(1),
-            data.stats.pressure.end.toFixed(1),
-            data.stats.pressure.change
-            ],
-            ['Humidade (%)', 
-            data.stats.humidity.min.toFixed(1), 
-            data.stats.humidity.max.toFixed(1), 
-            data.stats.humidity.avg.toFixed(1),
-            data.stats.humidity.start.toFixed(1),
-            data.stats.humidity.end.toFixed(1),
-            data.stats.humidity.change
-            ],
-            ['Altitude (m)', 
-            data.stats.altitude.min.toFixed(1), 
-            data.stats.altitude.max.toFixed(1), 
-            data.stats.altitude.avg.toFixed(1),
-            data.stats.altitude.start.toFixed(1),
-            data.stats.altitude.end.toFixed(1),
-            data.stats.altitude.change
-            ],
-            ['CO₂ (ppm)', 
-            data.stats.co2.min.toFixed(1), 
-            data.stats.co2.max.toFixed(1), 
-            data.stats.co2.avg.toFixed(1),
-            data.stats.co2.start.toFixed(1),
-            data.stats.co2.end.toFixed(1),
-            data.stats.co2.change
-            ],
-            ['Partículas (µg/m³)', 
-            data.stats.particles.min.toFixed(1), 
-            data.stats.particles.max.toFixed(1), 
-            data.stats.particles.avg.toFixed(1),
-            data.stats.particles.start.toFixed(1),
-            data.stats.particles.end.toFixed(1),
-            data.stats.particles.change
-            ]
-        ];
-        
-        // Generate the table
-        doc.autoTable({
-            head: [tableData[0]],
-            body: tableData.slice(1),
-            startY: 80,
-            theme: 'grid',
-            styles: {
-                cellPadding: 3,
-                fontSize: 10,
-                valign: 'middle'
-            },
-            headStyles: {
-                fillColor: [63, 81, 181],
-                textColor: [255, 255, 255],
-                fontStyle: 'bold'
-            }
-        });
-        
-        // Save the PDF with mission name and date
-        const fileName = `report_mission_${mission.id}_${mission.name.replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
-        doc.save(fileName);
+        return { min, max, avg, start, end, change: `${change.replace('.', ',')}%` };
     };
 
     if (loading) {

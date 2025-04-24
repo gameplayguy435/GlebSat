@@ -1,9 +1,8 @@
-import { useEffect } from 'react';
 import { 
   Box, Container, Typography, Grid2 as Grid, Card, CardContent, 
   CardMedia, CardActions, Paper, Button, useTheme 
 } from '@mui/material';
-import { Email, GitHub, LinkedIn } from '@mui/icons-material';
+import { GithubIcon, LinkedinIcon, MailIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const AboutUsPage = () => {
@@ -359,7 +358,7 @@ const AboutUsPage = () => {
                         href={member.links.github}
                         target="_blank" 
                         rel="noopener noreferrer"
-                        startIcon={<GitHub />}
+                        startIcon={<GithubIcon />}
                       >
                       </Button>
                     )}
@@ -370,7 +369,7 @@ const AboutUsPage = () => {
                         href={member.links.linkedin}
                         target="_blank" 
                         rel="noopener noreferrer"
-                        startIcon={<LinkedIn />}
+                        startIcon={<LinkedinIcon />}
                       >
                       </Button>
                     )}
@@ -379,7 +378,7 @@ const AboutUsPage = () => {
                       <Button 
                         size="small" 
                         href={`mailto:${member.links.email}`}
-                        startIcon={<Email />}
+                        startIcon={<MailIcon />}
                       >
                       </Button>
                     )}

@@ -123,7 +123,7 @@ const SignInContent = (props: any) => {
         localStorage.setItem('email', email);
         localStorage.setItem('userId', response.data.user.id);
         localStorage.setItem('username', response.data.user.name);
-        navigate('/admin/content', { replace: true });
+        navigate('/admin', { replace: true });
       } else {
         localStorage.setItem('isLoggedIn', 'false');
         localStorage.setItem('email', '');
@@ -259,7 +259,7 @@ const SignInContent = (props: any) => {
             >
               Entrar
             </Button>
-            {/* <Link
+            <Link
               component="button"
               type="button"
               onClick={handleClickOpen}
@@ -267,7 +267,7 @@ const SignInContent = (props: any) => {
               sx={{ alignSelf: 'center' }}
             >
               Esqueceu-se da sua palavra passe?
-            </Link> */}
+            </Link>
           </Box>
           {/* <Divider>ou</Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

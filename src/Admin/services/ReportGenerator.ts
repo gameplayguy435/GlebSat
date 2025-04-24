@@ -41,8 +41,8 @@ export const formatReportDate = (dateString: string) => {
   try {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-PT', {
-      day: '2-digit',
-      month: '2-digit',
+      day: 'numeric',
+      month: 'long',
       year: 'numeric'
     });
   } catch (error) {
@@ -114,7 +114,7 @@ export const generateMissionReport = (data: ReportData) => {
   doc.setFontSize(20);
   doc.setTextColor(33, 33, 33);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Relatório da Missão: ${data.mission.name}`, 20, 25);
+  doc.text(`Relatório da Missão - ${data.mission.name}`, 20, 25);
   
   // Mission details section
   doc.setFontSize(12);
@@ -131,7 +131,7 @@ export const generateMissionReport = (data: ReportData) => {
   doc.setFont('helvetica', 'normal');
   
   // Mission ID
-  doc.text(`ID: ${data.mission.id}`, 25, 55);
+  doc.text(`Número da Missão: ${data.mission.id}`, 25, 55);
   
   // Date formatting
   const startDate = new Date(data.mission.start_date);
@@ -152,24 +152,33 @@ export const generateMissionReport = (data: ReportData) => {
   // Add timestamp
   doc.setFontSize(9);
   doc.setTextColor(120, 120, 120);
-  doc.text(`Relatório gerado em: ${new Date().toLocaleString('pt-PT')}`, 25, 82);
+  doc.text(`Relatório gerado a: ${new Date().toLocaleString('pt-PT', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })}`, 25, 82);
   
   // Statistics Title
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(33, 33, 33);
-  doc.text("Estatísticas dos Sensores", 20, 100);
+  doc.text("Estatísticas", 20, 100);
   
   // Format numbers for display
   const formatValue = (value: any) => {
     if (value === undefined || value === null || value === 'N/A') return 'N/A';
-    return typeof value === 'number' ? value.toFixed(2) : value.toString();
+    return typeof value === 'number' 
+      ? value.toFixed(2).replace('.', ',') 
+      : value.toString().replace('.', ',');
   };
   
   // Prepare table data
   const tableData = [
     [
-      { content: 'Sensor', styles: { fontStyle: 'bold', halign: 'left' } },
+      { content: 'Parâmetro', styles: { fontStyle: 'bold', halign: 'left' } },
       { content: 'Mínimo', styles: { fontStyle: 'bold', halign: 'center' } },
       { content: 'Máximo', styles: { fontStyle: 'bold', halign: 'center' } },
       { content: 'Média', styles: { fontStyle: 'bold', halign: 'center' } },
@@ -214,7 +223,7 @@ export const generateMissionReport = (data: ReportData) => {
       { content: data.stats.altitude.change, styles: { halign: 'center' } }
     ],
     [
-      { content: 'CO₂ (ppm)', styles: { halign: 'left' } },
+      { content: 'CO2 (ppm)', styles: { halign: 'left' } },
       { content: formatValue(data.stats.co2.min), styles: { halign: 'center' } },
       { content: formatValue(data.stats.co2.max), styles: { halign: 'center' } },
       { content: formatValue(data.stats.co2.avg), styles: { halign: 'center' } },
@@ -241,11 +250,13 @@ export const generateMissionReport = (data: ReportData) => {
     styles: {
       fontSize: 10,
       cellPadding: 5,
+      valign: 'middle',
     },
     headStyles: {
       fillColor: [63, 81, 181],
       textColor: [255, 255, 255],
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      valign: 'middle',
     },
     alternateRowStyles: {
       fillColor: [240, 240, 240]
@@ -257,7 +268,7 @@ export const generateMissionReport = (data: ReportData) => {
   const dataPointCount = data.records.length;
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Total de pontos de dados: ${dataPointCount}`, 20, doc.autoTable.previous.finalY + 10);
+  doc.text(`Total de registos: ${dataPointCount}`, 20, doc.lastAutoTable.finalY + 10);
   
   // Add footer
   const pageCount = doc.getNumberOfPages();
@@ -265,11 +276,11 @@ export const generateMissionReport = (data: ReportData) => {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
-    doc.text(`GlebSat - Relatório de Missão - Página ${i} de ${pageCount}`, 20, doc.internal.pageSize.height - 10);
+    doc.text(`GlebSat - Relatório da Missão ${data.mission.name} - Página ${i} de ${pageCount}`, 20, doc.internal.pageSize.height - 10);
   }
   
   // Save the PDF
-  const fileName = `relatorio_missao_${data.mission.id}_${data.mission.name.replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+  const fileName = `relatorio_missao_${data.mission.name.replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fileName);
   
   return fileName;

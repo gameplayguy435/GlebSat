@@ -81,7 +81,7 @@ const SignUp = (props: any) => {
   useEffect(() => {
     console.log('isLoggedIn:', localStorage.getItem('isLoggedIn'));
     if (localStorage.getItem('isLoggedIn') === 'true') {
-      navigate('/admin/content', { replace: true });
+      navigate('/admin', { replace: true });
     } else {
       setIsLoading(false);
     }
