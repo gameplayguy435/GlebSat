@@ -404,7 +404,7 @@ export default function DataAnalysis() {
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography component="h1" variant="h4" fontWeight="medium">
+        <Typography component="h1" variant="h4">
           Análise de Dados
         </Typography>
       </Box>
@@ -415,7 +415,7 @@ export default function DataAnalysis() {
         </Alert>
       ) : (
         <>
-			<Typography component="h2" variant="h5" sx={{ mb: 2 }} gutterBottom>
+			<Typography component="h1" variant="h4" sx={{ mb: 2 }} fontWeight="medium">
 				Missões Recentes
 			</Typography>
 			<Grid container spacing={2} sx={{ mb: 3 }}>
@@ -481,14 +481,10 @@ export default function DataAnalysis() {
 				);
 				})}
 			</Grid>
-          
+          <Typography component="h1" variant="h4" sx={{ mb: 2 }} fontWeight="medium">
+            Trajetórias
+          </Typography>
           <Card sx={{ mb: 3, borderRadius: 2 }}>
-            <Box sx={{ p: 2 }}>
-              <Typography variant="h6">
-                Trajetórias
-              </Typography>
-            </Box>
-            <Divider />
             <Box sx={{ height: 500, position: 'relative' }}>
               <MapContainer 
                 center={[41.0644, -8.5762]} 
@@ -529,7 +525,7 @@ export default function DataAnalysis() {
             </Box>
           </Card>
           
-          <Typography component="h2" variant="h5" sx={{ mb: 2 }}>
+          <Typography component="h1" variant="h4" sx={{ mb: 2 }} fontWeight="medium">
             Visualização de Dados
           </Typography>
           

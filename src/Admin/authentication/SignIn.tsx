@@ -22,7 +22,7 @@ import { SatelliteAltRounded } from '@mui/icons-material';
 import ForgotPassword from './components/ForgotPassword';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
 import AppTheme from '../assets/shared-theme/AppTheme';
-import ThemeToggle from '../../ThemeToggle';
+import ThemeToggle from '../../components/ThemeToggle';
 import { SnackbarProvider, useSnackbar } from 'notistack';
 import { useReCaptchaV3 } from '../../services/ReCaptchaV3';
 
@@ -104,7 +104,7 @@ const SignInContent = (props: any) => {
 
     const recaptchaToken = await validateReCaptcha('login');
     if (!recaptchaToken) {
-      enqueueSnackbar('Erro ao validar reCAPTCHA!', { variant: 'error' });
+      enqueueSnackbar('Erro ao validar reCAPTCHA.', { variant: 'error' });
       return;
     }
 
@@ -129,11 +129,11 @@ const SignInContent = (props: any) => {
         localStorage.setItem('email', '');
         localStorage.setItem('userId', '');
         localStorage.setItem('username', '');
-        enqueueSnackbar(response.data.message, { variant: 'error' });
+        enqueueSnackbar('Erro ao iniciar sessão.', { variant: 'error' });
       }
     } catch (err) {
-      console.error('Erro ao iniciar sessão!', err);
-      enqueueSnackbar(err.response.data.message, { variant: 'error' });
+      console.error('Erro ao iniciar sessão.', err);
+      enqueueSnackbar('Erro ao iniciar sessão.', { variant: 'error' });
     }
   };
 

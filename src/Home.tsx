@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { 
   Box, Container, Typography, Grid2 as Grid, Card, CardContent, 
-  Paper, Button, LinearProgress, useTheme
+  Paper, Button, LinearProgress, useTheme, CircularProgress, Alert
 } from '@mui/material';
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
@@ -10,9 +10,24 @@ import {
 } from 'recharts';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ArrowForward, VideoCall, AccessTime } from '@mui/icons-material';
+import L from 'leaflet';
+import { ArrowForward, VideoCall, AccessTime, 
+  Air, Co2, Compress, Height, Thermostat, Waves
+} from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import FrontSensorChart from './components/FrontSensorChart';
+
+const API_URL = import.meta.env.VITE_BACKEND_API_URL;
+
+const fixLeafletIcon = () => {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  });
+};
 
 const HomePage = () => {
   const theme = useTheme();
@@ -24,9 +39,64 @@ const HomePage = () => {
     minutos: 0,
     segundos: 0
   });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [mission, setMission] = useState(null);
+  const [sensorData, setSensorData] = useState(null);
+  const [trajectoryData, setTrajectoryData] = useState([]);
   
   const targetDate = new Date('2025-05-12T00:00:00');
   
+  useEffect(() => {
+    fixLeafletIcon();
+    
+    // Fetch the latest completed mission data
+    const fetchLatestMissionData = async () => {
+      setLoading(true);
+      try {
+        // 1. Fetch all missions
+        const missionsResponse = await fetch(`${API_URL}/mission`);
+        const missionsData = await missionsResponse.json();
+        
+        if (missionsData.success && missionsData.missions.length > 0) {
+          // 2. Filter completed missions (with end_date)
+          const completedMissions = missionsData.missions
+            .filter(mission => mission.end_date)
+            .sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime());
+            
+          if (completedMissions.length > 0) {
+            const latestMission = completedMissions[0];
+            setMission(latestMission);
+            
+            // 3. Fetch records for the mission
+            const recordsResponse = await fetch(`${API_URL}/mission/${latestMission.id}/records`);
+            const recordsData = await recordsResponse.json();
+            
+            if (recordsData.success && recordsData.records.length > 0) {
+              // Process the records into sensor data
+              const processedData = processSensorData(recordsData.records);
+              setSensorData(processedData);
+              
+              // Extract trajectory data
+              const trajectory = processedData.trajectoryData;
+              if (trajectory && trajectory.length > 0) {
+                setTrajectoryData(trajectory);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching mission data:", err);
+        setError("Erro ao carregar os dados da missão");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchLatestMissionData();
+  }, []);
+
   useEffect(() => {
     const calculateTimeRemaining = () => {
       const now = new Date();
@@ -51,31 +121,204 @@ const HomePage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const timeSeriesData = [
-    { time: '00:00', aqi: 45, temp: 22, humidity: 65, pressure: 1012 },
-    { time: '04:00', aqi: 48, temp: 21, humidity: 68, pressure: 1013 },
-    { time: '08:00', aqi: 52, temp: 23, humidity: 72, pressure: 1014 },
-    { time: '12:00', aqi: 55, temp: 25, humidity: 70, pressure: 1012 },
-    { time: '16:00', aqi: 49, temp: 24, humidity: 67, pressure: 1011 },
-    { time: '20:00', aqi: 47, temp: 22, humidity: 64, pressure: 1010 },
-  ];
-  
-  const pieData = [
-    { name: 'N₂', value: 78 },
-    { name: 'O₂', value: 21 },
-    { name: 'CO₂', value: 0.04 },
-    { name: 'Other', value: 0.96 },
-  ];
-  
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-  
-  const trajectoryPoints = [
-    [41.0644, -8.5761559],
-    [41.062, -8.579],
-    [41.061, -8.578],
-    [41.059, -8.576],
-    [41.059, -8.573],
-  ];
+  const processSensorData = (records) => {
+    // Initialize data arrays for each sensor type
+    const temperature = {
+      series: [],
+      min: Number.POSITIVE_INFINITY,
+      max: Number.NEGATIVE_INFINITY,
+      trend: 'neutral',
+      trendLabel: '0%',
+      unit: "°C"
+    };
+    
+    const pressure = {
+      series: [],
+      min: Number.POSITIVE_INFINITY,
+      max: Number.NEGATIVE_INFINITY,
+      trend: 'neutral',
+      trendLabel: '0%',
+      unit: "hPa"
+    };
+    
+    const humidity = {
+      series: [],
+      min: Number.POSITIVE_INFINITY,
+      max: Number.NEGATIVE_INFINITY,
+      trend: 'neutral',
+      trendLabel: '0%',
+      unit: "%"
+    };
+    
+    const altitude = {
+      series: [],
+      min: Number.POSITIVE_INFINITY,
+      max: Number.NEGATIVE_INFINITY,
+      trend: 'neutral',
+      trendLabel: '0%',
+      unit: "m"
+    };
+    
+    const co2 = {
+      series: [],
+      min: Number.POSITIVE_INFINITY,
+      max: Number.NEGATIVE_INFINITY,
+      trend: 'neutral',
+      trendLabel: '0%',
+      unit: "ppm"
+    };
+    
+    const particles = {
+      series: [],
+      min: Number.POSITIVE_INFINITY,
+      max: Number.NEGATIVE_INFINITY,
+      trend: 'neutral',
+      trendLabel: '0%',
+      unit: "µg/m³"
+    };
+    
+    // Extract timestamps and trajectory data
+    const timeLabels = [];
+    const trajectoryData = [];
+    
+    // Process each record
+    records.forEach((record) => {
+      const data = record.data;
+      
+      // Extract timestamp for labels
+      if (data.timestamp) {
+        const date = new Date(data.timestamp);
+        const index = timeLabels.length;
+        timeLabels.push(`${index}s`);
+      }
+      
+      if (data.temperature_c !== undefined) {
+        const tempValue = Number(data.temperature_c);
+        if (!isNaN(tempValue)) {
+          temperature.series.push(tempValue);
+          temperature.min = Math.min(temperature.min, tempValue);
+          temperature.max = Math.max(temperature.max, tempValue);
+        }
+      }
+      
+      if (data.pressure_hpa !== undefined) {
+        const pressureValue = Number(data.pressure_hpa);
+        if (!isNaN(pressureValue)) {
+          pressure.series.push(pressureValue);
+          pressure.min = Math.min(pressure.min, pressureValue);
+          pressure.max = Math.max(pressure.max, pressureValue);
+        }
+      }
+
+      if (data.humidity_percent !== undefined) {
+        const humidityValue = Number(data.humidity_percent);
+        if (!isNaN(humidityValue)) {
+          humidity.series.push(humidityValue);
+          humidity.min = Math.min(humidity.min, humidityValue);
+          humidity.max = Math.max(humidity.max, humidityValue);
+        }
+      }
+      
+      if (data.altitude_m !== undefined) {
+        const altitudeValue = Number(data.altitude_m);
+        if (!isNaN(altitudeValue)) {
+          altitude.series.push(altitudeValue);
+          altitude.min = Math.min(altitude.min, altitudeValue);
+          altitude.max = Math.max(altitude.max, altitudeValue);
+        }
+      }
+      
+      if (data.co2_ppm !== undefined) {
+        const co2Value = Number(data.co2_ppm);
+        if (!isNaN(co2Value)) {
+          co2.series.push(co2Value);
+          co2.min = Math.min(co2.min, co2Value);
+          co2.max = Math.max(co2.max, co2Value);
+        }
+      }
+      
+      if (data.particles_ug_m3 !== undefined) {
+        const particlesValue = Number(data.particles_ug_m3);
+        if (!isNaN(particlesValue)) {
+          particles.series.push(particlesValue);
+          particles.min = Math.min(particles.min, particlesValue);
+          particles.max = Math.max(particles.max, particlesValue);
+        }
+      }
+      
+      if (data.latitude !== undefined && data.longitude !== undefined) {
+        const latitude = Number(data.latitude);
+        const longitude = Number(data.longitude);
+        if (!isNaN(latitude) && !isNaN(longitude)) {
+          trajectoryData.push([latitude, longitude]);
+        }
+      }
+    });
+    
+    // Calculate trends for each sensor
+    const calculateTrend = (series) => {
+      if (series.length < 2) return { trend: 'neutral', trendLabel: '0%' };
+      
+      const first = series[0];
+      const last = series[series.length - 1];
+      const percentChange = ((last - first) / first) * 100;
+      
+      let trend = 'neutral';
+      if (percentChange > 3) {
+        trend = 'up';
+      } else if (percentChange < -3) {
+        trend = 'down';
+      }
+      
+      return { 
+        trend, 
+        trendLabel: `${percentChange > 0 ? '+' : ''}${percentChange.toFixed(1)}%` 
+      };
+    };
+    
+    // Set current values and trends
+    temperature.current = temperature.series.length > 0 ? temperature.series[temperature.series.length - 1].toFixed(1).replace('.', ',') : '0';
+    const tempTrend = calculateTrend(temperature.series);
+    temperature.trend = tempTrend.trend;
+    temperature.trendLabel = tempTrend.trendLabel;
+    
+    pressure.current = pressure.series.length > 0 ? pressure.series[pressure.series.length - 1].toFixed(1).replace('.', ',') : '0';
+    const pressureTrend = calculateTrend(pressure.series);
+    pressure.trend = pressureTrend.trend;
+    pressure.trendLabel = pressureTrend.trendLabel;
+    
+    humidity.current = humidity.series.length > 0 ? humidity.series[humidity.series.length - 1].toFixed(0).replace('.', ',') : '0';
+    const humidityTrend = calculateTrend(humidity.series);
+    humidity.trend = humidityTrend.trend;
+    humidity.trendLabel = humidityTrend.trendLabel;
+    
+    altitude.current = altitude.series.length > 0 ? altitude.series[altitude.series.length - 1].toFixed(0).replace('.', ',') : '0';
+    const altitudeTrend = calculateTrend(altitude.series);
+    altitude.trend = altitudeTrend.trend;
+    altitude.trendLabel = altitudeTrend.trendLabel;
+    
+    co2.current = co2.series.length > 0 ? co2.series[co2.series.length - 1].toFixed(0).replace('.', ',') : '0';
+    const co2Trend = calculateTrend(co2.series);
+    co2.trend = co2Trend.trend;
+    co2.trendLabel = co2Trend.trendLabel;
+    
+    particles.current = particles.series.length > 0 ? particles.series[particles.series.length - 1].toFixed(1).replace('.', ',') : '0';
+    const particlesTrend = calculateTrend(particles.series);
+    particles.trend = particlesTrend.trend;
+    particles.trendLabel = particlesTrend.trendLabel;
+    
+    // Return the processed sensor data
+    return {
+      timeLabels,
+      temperature,
+      pressure,
+      humidity,
+      altitude,
+      co2,
+      particles,
+      trajectoryData
+    };
+  };
 
   const scrollToMetrics = () => {
     document.getElementById('metrics-dashboard')?.scrollIntoView({ 
@@ -135,7 +378,7 @@ const HomePage = () => {
                 sx={{ mb: 4, opacity: 0.9 }}
                 className="color-primary"
               >
-                Monitorização ambiental em tempo real a partir do espaço para proteger o futuro do nosso planeta
+                Monitorização ambiental em tempo real para proteger o futuro do nosso planeta
               </Typography>
               
                 <Button 
@@ -260,275 +503,157 @@ const HomePage = () => {
       {/* Metrics Dashboard */}
       <Container maxWidth="xl" sx={{ mb: 8 }} id="metrics-dashboard">
         <Typography variant="h4" fontWeight="bold" gutterBottom mb={4} className="color-primary">
-          Painel de Monitorização Ambiental
+          Monitorização Ambiental
         </Typography>
         
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6, lg: 3 }} >
-            <Card 
-              component={motion.div}
-              whileHover={{ y: -5 }}
-              elevation={4} 
-              sx={{ 
-                borderRadius: 2, 
-                background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-                color: 'white',
-                height: '100%'
-              }}
-              className="dashboard-card"
-            >
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight="500">
-                  Índice de Qualidade do Ar
-                </Typography>
-                <Typography variant="h3" fontWeight="bold" my={2}>
-                  45
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={45} 
-                  sx={{ 
-                    mb: 1, 
-                    height: 8, 
-                    borderRadius: 2,
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: 'rgba(255,255,255,0.8)'
-                    }
-                  }} 
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Alert severity="error">{error}</Alert>
+        ) : !sensorData ? (
+          <Alert severity="info">Não existem dados disponíveis para mostrar.</Alert>
+        ) : (
+          <>            
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+                <FrontSensorChart 
+                  title="Temperatura"
+                  value={sensorData.temperature.current}
+                  unit={sensorData.temperature.unit}
+                  trend={sensorData.temperature.trend}
+                  trendLabel={sensorData.temperature.trendLabel}
+                  data={sensorData.temperature.series}
+                  timeLabels={sensorData.timeLabels}
+                  color={theme.palette.error.main}
+                  icon={<Thermostat color="error" />}
+                  minValue={0}
+                  maxValue={sensorData.temperature.max * 1.2}
                 />
-                <Typography variant="body2">
-                  Bom - Atualizado há 2 minutos
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-            <Card 
-              component={motion.div}
-              whileHover={{ y: -5 }}
-              elevation={4} 
-              sx={{ 
-                borderRadius: 2, 
-                background: 'linear-gradient(135deg, #2196F3 0%, #0D47A1 100%)',
-                color: 'white',
-                height: '100%'
-              }}
-              className="dashboard-card"
-            >
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight="500">
-                  Temperatura
-                </Typography>
-                <Typography variant="h3" fontWeight="bold" my={2}>
-                  22°C
-                </Typography>
-                <Typography variant="body2">
-                  Nível da Superfície - precisão de ±0.5°C
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-            <Card 
-              component={motion.div}
-              whileHover={{ y: -5 }}
-              elevation={4} 
-              sx={{ 
-                borderRadius: 2, 
-                background: 'linear-gradient(135deg, #9C27B0 0%, #6A1B9A 100%)',
-                color: 'white',
-                height: '100%'
-              }}
-              className="dashboard-card"
-            >
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight="500">
-                  Níveis de CO<sub>2</sub>
-                </Typography>
-                <Typography variant="h3" fontWeight="bold" my={2}>
-                  412ppm
-                </Typography>
-                <Typography variant="body2">
-                  Estável - aumento anual de 0.8%
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-            <Card 
-              component={motion.div}
-              whileHover={{ y: -5 }}
-              elevation={4} 
-              sx={{ 
-                borderRadius: 2, 
-                background: 'linear-gradient(135deg, #FF5722 0%, #D84315 100%)',
-                color: 'white',
-                height: '100%'
-              }}
-              className="dashboard-card"
-            >
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight="500">
-                  Humidade
-                </Typography>
-                <Typography variant="h3" fontWeight="bold" my={2}>
-                  65%
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={65} 
-                  sx={{ 
-                    mb: 1, 
-                    height: 8, 
-                    borderRadius: 2,
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: 'rgba(255,255,255,0.8)'
-                    }
-                  }} 
+              </Grid>
+              
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+                <FrontSensorChart 
+                  title="Pressão"
+                  value={sensorData.pressure.current}
+                  unit={sensorData.pressure.unit}
+                  trend={sensorData.pressure.trend}
+                  trendLabel={sensorData.pressure.trendLabel}
+                  data={sensorData.pressure.series}
+                  timeLabels={sensorData.timeLabels}
+                  color={theme.palette.info.main}
+                  icon={<Compress color="info" />}
+                  minValue={sensorData.pressure.min * 0.90}
+                  maxValue={sensorData.pressure.max * 1.1}
                 />
-                <Typography variant="body2">
-                  Moderada - 3% acima da média
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid size={{ xs: 12, lg: 6}}>
+              </Grid>
+              
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+                <FrontSensorChart 
+                  title="Humidade"
+                  value={sensorData.humidity.current}
+                  unit={sensorData.humidity.unit}
+                  trend={sensorData.humidity.trend}
+                  trendLabel={sensorData.humidity.trendLabel}
+                  data={sensorData.humidity.series}
+                  timeLabels={sensorData.timeLabels}
+                  color={theme.palette.primary.main}
+                  icon={<Waves color="primary" />}
+                  minValue={0}
+                  maxValue={100}
+                />
+              </Grid>
+              
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+                <FrontSensorChart 
+                  title="Altitude"
+                  value={sensorData.altitude.current}
+                  unit={sensorData.altitude.unit}
+                  trend={sensorData.altitude.trend}
+                  trendLabel={sensorData.altitude.trendLabel}
+                  data={sensorData.altitude.series}
+                  timeLabels={sensorData.timeLabels}
+                  color={theme.palette.secondary.main}
+                  icon={<Height color="secondary" />}
+                  minValue={0}
+                  maxValue={sensorData.altitude.max * 1.2}
+                />
+              </Grid>
+              
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+                <FrontSensorChart 
+                  title="Níveis de CO₂"
+                  value={sensorData.co2.current}
+                  unit={sensorData.co2.unit}
+                  trend={sensorData.co2.trend}
+                  trendLabel={sensorData.co2.trendLabel}
+                  data={sensorData.co2.series}
+                  timeLabels={sensorData.timeLabels}
+                  color={theme.palette.warning.main}
+                  icon={<Co2 color="warning" />}
+                  minValue={sensorData.co2.min * 0.8}
+                  maxValue={sensorData.co2.max * 1.2}
+                />
+              </Grid>
+              
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+                <FrontSensorChart 
+                  title="Partículas Finas"
+                  value={sensorData.particles.current}
+                  unit={sensorData.particles.unit}
+                  trend={sensorData.particles.trend}
+                  trendLabel={sensorData.particles.trendLabel}
+                  data={sensorData.particles.series}
+                  timeLabels={sensorData.timeLabels}
+                  color={theme.palette.success.main}
+                  icon={<Air color="success" />}
+                  minValue={0}
+                  maxValue={sensorData.particles.max * 1.3}
+                />
+              </Grid>
+            </Grid>
+            
+            <Typography variant="h4" fontWeight="bold" gutterBottom mb={4} className="color-primary">
+              Trajetória do Satélite
+            </Typography>
             <Card 
               elevation={3} 
-              sx={{ borderRadius: 2, p: 2, height: '100%' }}
-              className="chart-card bg-tertiary"
-            >
-              <Typography variant="h6" gutterBottom fontWeight="medium" className="color-primary">
-                Análise Ambiental de 24 Horas
-              </Typography>
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={timeSeriesData}>
-                    <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
-                    <XAxis dataKey="time" />
-                    <YAxis />
-                    <Tooltip contentStyle={{ backgroundColor: 'var(--background-secondary)' }} />
-                    <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="aqi" 
-                      stroke="#8884d8" 
-                      fillOpacity={0.3} 
-                      fill="#8884d8" 
-                      name="Índice de Qualidade do Ar"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="temp" 
-                      stroke="#82ca9d" 
-                      fillOpacity={0.3} 
-                      fill="#82ca9d" 
-                      name="Temperatura (°C)"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="humidity" 
-                      stroke="#ffc658" 
-                      fillOpacity={0.3} 
-                      fill="#ffc658"
-                      name="Humidade (%)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </Box>
-            </Card>
-          </Grid>
-          
-          <Grid size={{ xs: 12, lg: 6}}>
-            <Card 
-              elevation={3} 
-              sx={{ borderRadius: 2, p: 2, height: '100%' }}
-              className="chart-card bg-tertiary"
-            >
-              <Typography variant="h6" gutterBottom fontWeight="medium" className="color-primary">
-                Trajetória do Satélite
-              </Typography>
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={timeSeriesData}>
-                    <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
-                    <XAxis dataKey="time" />
-                    <YAxis />
-                    <Tooltip contentStyle={{ backgroundColor: 'var(--background-secondary)' }} />
-                    <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="aqi" 
-                      stroke="#8884d8" 
-                      fillOpacity={0.3} 
-                      fill="#8884d8" 
-                      name="Índice de Qualidade do Ar"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="temp" 
-                      stroke="#82ca9d" 
-                      fillOpacity={0.3} 
-                      fill="#82ca9d" 
-                      name="Temperatura (°C)"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="humidity" 
-                      stroke="#ffc658" 
-                      fillOpacity={0.3} 
-                      fill="#ffc658" 
-                      name="Humidade (%)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </Box>
-            </Card>
-          </Grid>
-          
-          <Grid size={{ xs: 12 }}>
-            <Card 
-              elevation={3} 
-              sx={{ borderRadius: 2, height: '400px', overflow: 'hidden' }}
+              sx={{ borderRadius: 2, height: '400px', overflow: 'hidden', mb: 4 }}
               className="map-card bg-tertiary"
             >
-              <CardContent sx={{ height: '100%', p: 0 }}>
-                <Typography variant="h6" p={2} gutterBottom fontWeight="medium" className="color-primary">
-                  Trajetória do Satélite
-                </Typography>
-                <Box sx={{ height: 'calc(100% - 48px)' }}>
+                <Box sx={{ height: '100%' }}>
                   <MapContainer 
-                    center={[41.0644, -8.5761559]} 
-                    zoom={13} 
-                    style={{ height: '100%', width: '100%', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+                    center={trajectoryData.length > 0 ? trajectoryData[0] : [41.0644, -8.5761559]} 
+                    zoom={15} 
+                    style={{ height: '100%', width: '100%', borderRadius: 0 }}
                   >
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
-                    <Polyline 
-                      positions={trajectoryPoints} 
-                      color="blue" 
-                      weight={3} 
-                      opacity={0.7} 
-                    />
-                    <Marker position={trajectoryPoints[trajectoryPoints.length - 1]}>
-                      <Popup>
-                        Posição Atual
-                      </Popup>
-                    </Marker>
+                    {trajectoryData.length > 0 && (
+                      <>
+                        <Polyline 
+                          positions={trajectoryData} 
+                          color={theme.palette.primary.main} 
+                          weight={3} 
+                          opacity={0.8}
+                          smoothFactor={1}
+                        />
+                        <Marker position={trajectoryData[trajectoryData.length - 1]}>
+                          <Popup>
+                            Posição Final <br/>
+                            Altitude: {sensorData.altitude.current} {sensorData.altitude.unit}
+                          </Popup>
+                        </Marker>
+                      </>
+                    )}
                   </MapContainer>
                 </Box>
-              </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </>
+        )}
       </Container>
 
       <Box sx={{ py: 8 }} className="bg-tertiary sections-preview">
@@ -566,8 +691,8 @@ const HomePage = () => {
                   Sobre Nós
                 </Typography>
                 <Typography variant="body1" paragraph className="color-secondary">
-                  Somos uma equipa de estudantes ambiciosos, dedicados à monitorização das condições ambientais da Terra a partir do espaço. 
-                  A nossa missão é fornecer dados precisos e em tempo real para ajudar a combater as alterações climáticas e promover práticas sustentáveis.
+                  Somos uma equipa de estudantes ambiciosos, dedicados à monitorização das condições atmosféricas e ambientais da Terra. 
+                  A nossa missão é fornecer dados precisos para ajudar a combater as alterações climáticas e promover práticas sustentáveis.
                 </Typography>
                 <Button 
                   variant="contained" 
@@ -597,9 +722,9 @@ const HomePage = () => {
                   Últimas Notícias
                 </Typography>
                 <Typography variant="body1" paragraph className="color-secondary">
-                  Mantenha-se atualizado com o progresso da nossa missão, descobertas científicas e informações ambientais. 
-                  A nossa secção de notícias fornece atualizações regulares sobre implementações de satélites, 
-                  descobertas de análise de dados e projetos de investigação colaborativa.
+                  Mantenha-se atualizado com o progresso da nossa missão, desenvolvimento científico e informações ambientais. 
+                  A nossa secção de notícias fornece atualizações regulares sobre todo o projeto, incluindo missões realizadas, 
+                  vertentes de desenvolvimento e informações da equipa.
                 </Typography>
                 <Button 
                   variant="contained" 
@@ -659,9 +784,9 @@ const HomePage = () => {
                   Galeria de Imagens
                 </Typography>
                 <Typography variant="body1" paragraph className="color-secondary">
-                  Explora a jornada visual da nossa missão através de impressionantes imagens de satélite, 
-                  fotografias de equipamentos, eventos da equipa e vistas deslumbrantes da Terra a partir do espaço. 
-                  A nossa galeria mostra a beleza do nosso planeta e a tecnologia que usamos para o monitorizar.
+                  Explora a jornada visual da nossa missão através de imagens representativas do nosso trabalho, 
+                  fotografias de componentes e processos de desenvolvimento. 
+                  A nossa galeria mostra o decorrer da missão que visamos concluir e a tecnologia de monitorização do ambiente.
                 </Typography>
                 <Button 
                   variant="contained" 

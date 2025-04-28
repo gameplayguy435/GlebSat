@@ -73,15 +73,15 @@ const MissionsContent = () => {
                     formatted_duration: formatDuration(mission.duration)
                 }));
                 
-                console.log('Formatted missions:', formattedMissions);
+                console.log('Missões formatadas:', formattedMissions);
                 setMissions(formattedMissions);
             } else {
-                console.error('Failed to fetch missions:', data.message);
-                enqueueSnackbar('Erro ao carregar as missões', { variant: 'error' });
+                console.error('Erro ao carregar as missões:', data.message);
+                enqueueSnackbar('Erro ao carregar as missões.', { variant: 'error' });
             }
         } catch (err) {
             console.error('Erro ao carregar as missões:', err);
-            enqueueSnackbar('Erro: ' + err, { variant: 'error' });
+            enqueueSnackbar('Erro ao carregar as missões.', { variant: 'error' });
         } finally {
             setLoading(false);
         }
@@ -104,7 +104,7 @@ const MissionsContent = () => {
 
             return formattedDate;
         } catch (error) {
-            console.error("Error formatting date:", error);
+            console.error("Erro ao formatar a data:", error);
             return 'Dados Indisponíveis';
         }
     };
@@ -120,7 +120,7 @@ const MissionsContent = () => {
                         
             return duration;
         } catch (error) {
-            console.error("Error formatting duration:", error);
+            console.error("Erro ao formatar a duração:", error);
             return 'Dados Indisponíveis';
         }
     };
@@ -145,7 +145,7 @@ const MissionsContent = () => {
     
     const handleOpenMission = (mission: Mission) => {
         if (mission.start_date === null) {
-            enqueueSnackbar('Dados Indisponíveis', { variant: 'error' });
+            enqueueSnackbar('Sem dados para visualizar.', { variant: 'warning' });
         } else {
             navigate(`/admin/missions/${mission.id}`);
         }
@@ -153,7 +153,7 @@ const MissionsContent = () => {
 
     const handleSave = async () => {
         if (!currentMission.name?.trim()) {
-            enqueueSnackbar('O nome da missão é obrigatório', { variant: 'error' });
+            enqueueSnackbar('O nome da missão é obrigatório.', { variant: 'error' });
             return;
         }
 
@@ -184,21 +184,20 @@ const MissionsContent = () => {
                 }
             } else {
                 console.error('Erro ao criar a missão:', data.message);
-                enqueueSnackbar('Erro ao criar a missão', { variant: 'error' });
+                enqueueSnackbar('Erro ao criar a missão.', { variant: 'error' });
             }
         } catch (err) {
             console.error('Erro ao criar a missão:', err);
-            enqueueSnackbar('Erro de conexão ao criar a missão', { variant: 'error' });
+            enqueueSnackbar('Erro de conexão ao criar a missão.', { variant: 'error' });
         }
     };
 
     const handleImportMission = (id: number) => {
         const mission = missions.find(m => m.id === id);
         if (mission && mission.end_date && mission.duration) {
-            enqueueSnackbar(
-                'Não é possível importar dados em missões concluídas.', 
-                { variant: 'warning' }
-            );
+            enqueueSnackbar('Não é possível importar dados em missões concluídas.', {
+                variant: 'warning'
+            });
             return;
         }
         
@@ -224,11 +223,9 @@ const MissionsContent = () => {
                 const mission = missions.find(m => m.id === id);
                 const fileName = `missao_${mission?.name.replace(/\s+/g, '_').toLowerCase() || 'export'}_${new Date().toISOString().split('T')[0]}.xlsx`;
                 
-                // Write and download
                 const excelBuffer = write(workbook, { bookType: 'xlsx', type: 'array' });
                 const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 
-                // Create download link and trigger download
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
@@ -241,11 +238,11 @@ const MissionsContent = () => {
                     variant: 'success' 
                 });
             } else {
-                enqueueSnackbar('Nenhum dado encontrado para exportar', { variant: 'warning' });
+                enqueueSnackbar('Sem dados para exportar.', { variant: 'warning' });
             }
         } catch (error) {
-            console.error('Error exporting mission data:', error);
-            enqueueSnackbar(`Erro ao exportar dados: ${error.message}`, { variant: 'error' });
+            console.error('Erro ao exportar dados:', error);
+            enqueueSnackbar('Erro ao exportar dados.', { variant: 'error' });
         } finally {
             setLoading(false);
         }
@@ -263,25 +260,33 @@ const MissionsContent = () => {
             const missionData = await missionResponse.json();
             
             if (!missionData.success) {
-              throw new Error('Failed to fetch mission details');
+                enqueueSnackbar('Erro ao obter dados da missão.', { variant: 'error' });
+                throw new Error('Erro ao obter dados da missão.');
             }
             
             const mission = missionData.mission;
             const recordsData = result.records.map(record => record.data);
             
-            // Process data for report
             const processedData = processDataForReport(recordsData, mission);
             
-            // Generate PDF report
-            const fileName = generateMissionReport(processedData);
+            const blob = generateMissionReport(processedData);
+        
+            const blobUrl = URL.createObjectURL(blob);
+            const newTab = window.open(blobUrl, '_blank');
             
-            enqueueSnackbar(`Relatório gerado com sucesso: ${fileName}`, { variant: 'success' });
+            if (newTab) {
+                newTab.addEventListener('load', () => {
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                });
+            }
+            
+            enqueueSnackbar('Relatório gerado com sucesso!', { variant: 'success' });
           } else {
-            enqueueSnackbar('Nenhum dado encontrado para gerar relatório', { variant: 'warning' });
+            enqueueSnackbar('Sem dados para criar relatório.', { variant: 'warning' });
           }
         } catch (error) {
-          console.error('Error generating report:', error);
-          enqueueSnackbar(`Erro ao gerar relatório: ${error.message}`, { variant: 'error' });
+          console.error('Erro ao criar relatório:', error);
+          enqueueSnackbar('Erro ao criar relatório.', { variant: 'error' });
         } finally {
           setLoading(false);
         }
@@ -294,7 +299,7 @@ const MissionsContent = () => {
             
             const missionId = fileInputRef.current.dataset.missionId;
             if (!missionId) {
-                enqueueSnackbar('ID da missão não encontrado', { variant: 'error' });
+                enqueueSnackbar('Missão não encontrada.', { variant: 'error' });
                 return;
             }
             
@@ -336,7 +341,10 @@ const MissionsContent = () => {
                         const worksheet = workbook.Sheets[sheetName];
                         data = utils.sheet_to_json(worksheet);
                     } else {
-                        throw new Error('Formato de ficheiro não suportado. Use CSV ou XLSX.');
+                        enqueueSnackbar('Apenas ficheiros CSV e XLSX são suportados.', { 
+                            variant: 'error' 
+                        });
+                        throw new Error('Apenas ficheiros CSV e XLSX são suportados.');
                     }
                     
                     // Send data to backend
@@ -368,14 +376,14 @@ const MissionsContent = () => {
                                 navigate(`/admin/missions/${missionId}`, { replace: true });
                             }
                         } else {
-                            enqueueSnackbar(`Erro: ${result.message}`, { variant: 'error' });
+                            enqueueSnackbar('Erro ao importar o ficheiro.', { variant: 'error' });
                         }
                     } else {
-                        enqueueSnackbar('Nenhum dado encontrado no ficheiro', { variant: 'warning' });
+                        enqueueSnackbar('Sem dados para importar.', { variant: 'warning' });
                     }
                 } catch (error) {
-                    console.error('Error processing file:', error);
-                    enqueueSnackbar(`Erro ao processar o ficheiro: ${error.message}`, { 
+                    console.error('Erro ao processar o ficheiro:', error);
+                    enqueueSnackbar('Erro ao processar o ficheiro.', { 
                         variant: 'error' 
                     });
                 } finally {
@@ -387,7 +395,7 @@ const MissionsContent = () => {
             
             reader.onerror = () => {
                 setLoading(false);
-                enqueueSnackbar('Erro ao ler o ficheiro', { variant: 'error' });
+                enqueueSnackbar('Erro ao ler o ficheiro.', { variant: 'error' });
             };
             
             // Read the file
@@ -398,7 +406,7 @@ const MissionsContent = () => {
             }
         } catch (error) {
             console.error('Error handling file upload:', error);
-            enqueueSnackbar(`Erro: ${error.message}`, { variant: 'error' });
+            enqueueSnackbar('Erro ao carregar o ficheiro.', { variant: 'error' });
             setLoading(false);
         }
     };

@@ -81,14 +81,14 @@ const ImagesContent = () => {
                 
                 if (data.success) {
                     setCategories(data.categories);
-                    console.log('Categories loaded:', data.categories);
+                    console.log('Categorias carregadas:', data.categories);
                 } else {
                     console.error('Erro ao carregar as categorias: ', data.message);
-                    enqueueSnackbar('Erro: ao carregar as categorias', { variant: 'error' });
+                    enqueueSnackbar('Erro ao carregar as categorias.', { variant: 'error' });
                 }
             } catch (err) {
                 console.error('Erro ao carregar as categorias:', err);
-                enqueueSnackbar('Erro: ' + err, { variant: 'error' });
+                enqueueSnackbar('Erro ao carregar as categorias.', { variant: 'error' });
             }
         }
 
@@ -102,11 +102,11 @@ const ImagesContent = () => {
                     console.log('News Articles loaded:', data.news_articles);
                 } else {
                     console.error('Erro ao carregar as notícias:', data.message);
-                    enqueueSnackbar('Erro ao carregar as notícias', { variant: 'error' });
+                    enqueueSnackbar('Erro ao carregar as notícias.', { variant: 'error' });
                 }
             } catch (err) {
                 console.error('Erro ao carregar as notícias:', err);
-                enqueueSnackbar('Erro: ' + err, { variant: 'error' });
+                enqueueSnackbar('Erro ao carregar as notícias.', { variant: 'error' });
             }
         }
 
@@ -124,11 +124,11 @@ const ImagesContent = () => {
                     console.log('Images loaded:', updatedUrlImages);
                 } else {
                     console.error('Erro ao carregar as imagens:', data.message);
-                    enqueueSnackbar('Erro ao carregar as imagens', { variant: 'error' });
+                    enqueueSnackbar('Erro ao carregar as imagens.', { variant: 'error' });
                 }
             } catch (err) {
                 console.error('Erro ao carregar as imagens:', err);
-                enqueueSnackbar('Erro: ' + err, { variant: 'error' });
+                enqueueSnackbar('Erro ao carregar as imagens.', { variant: 'error' });
             }
         }
 
@@ -178,12 +178,12 @@ const ImagesContent = () => {
                 return true;
             } else {
                 console.error('Ocorreu um erro ao guardar a imagem:', data.message);
-                enqueueSnackbar('Erro: ' + data.message, { variant: 'error' });
+                enqueueSnackbar('Erro ao guardar a imagem.', { variant: 'error' });
                 return false;
             }
         } catch (err) {
             console.error('Erro ao guardar a imagem:', err);
-            enqueueSnackbar('Erro de conexão ao guardar a imagem', { variant: 'error' });
+            enqueueSnackbar('Erro ao guardar a imagem.', { variant: 'error' });
             return false;
         }
     }
@@ -208,14 +208,14 @@ const ImagesContent = () => {
 
         if (!currentImage.name.trim()) {
             enqueueSnackbar(
-                "Por favor, escolha um nome", 
+                "Por favor, escolha um nome!", 
                 { variant: 'error', autoHideDuration: 3000 }
             );
             return;
         }
         if (!currentImage.category) {
             enqueueSnackbar(
-                "Por favor, selecione uma categoria", 
+                "Por favor, selecione uma categoria!", 
                 { variant: 'error', autoHideDuration: 3000 }
             );
             return;
@@ -326,7 +326,7 @@ const ImagesContent = () => {
     return (
         <Box sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h4" component="h1">
+                <Typography variant="h4" component="h1" fontWeight="medium">
                     Gestão de Imagens
                 </Typography>
                 <Button 

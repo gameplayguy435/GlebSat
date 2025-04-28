@@ -100,6 +100,28 @@ class RegisterView(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
+            
+class GetUserView(APIView):
+    def get(self, request, user_id, format=None):
+        try:
+            user = User.objects.get(id=user_id)
+            serializer = UserSerializer(user)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Utilizador obtido com sucesso!',
+                    'user': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except User.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Utilizador não encontrado!',
+                },
+                status=status.HTTP_200_OK,
+            )
 
 class NewsArticleView(APIView):
     def get(self, request, format=None):

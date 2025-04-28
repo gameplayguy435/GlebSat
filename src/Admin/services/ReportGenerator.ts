@@ -281,7 +281,7 @@ export const generateMissionReport = (data: ReportData) => {
   
   // Save the PDF
   const fileName = `relatorio_missao_${data.mission.name.replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(fileName);
+  const pdfBlob = doc.output('blob');
   
-  return fileName;
+  return pdfBlob;
 };

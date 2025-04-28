@@ -19,7 +19,7 @@ import { styled } from '@mui/material/styles';
 import AppTheme from '../assets/shared-theme/AppTheme';
 // import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
-import ThemeToggle from '../../ThemeToggle';
+import ThemeToggle from '../../components/ThemeToggle';
 import { SatelliteAltRounded } from '@mui/icons-material';
 
 const Card = styled(MuiCard)(({ theme }) => ({

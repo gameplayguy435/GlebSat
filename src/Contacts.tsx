@@ -68,11 +68,11 @@ const Contacts = () => {
         setSubmitted(true);
       } else {
         console.error('Erro ao enviar o email:', data.message);
-        enqueueSnackbar(data.message, { variant: 'error' });
+        enqueueSnackbar('Erro ao enviar o email.', { variant: 'error' });
       }
     } catch (err) {
       console.error('Erro de conexão:', err);
-      enqueueSnackbar('Erro de conexão ao enviar o email', { variant: 'error' });
+      enqueueSnackbar('Erro de conexão ao enviar o email.', { variant: 'error' });
     }
   };
 
@@ -166,7 +166,7 @@ const Contacts = () => {
                 </Typography>
                 
                 <Typography variant="body1" paragraph sx={{ mb: 4, opacity: 0.8 }} className="color-secondary">
-                  Utilize um dos nossos canais de contacto abaixo ou preencha o formulário para nos enviar uma mensagem direta.
+                  Utilize um dos nossos meios de contacto abaixo ou preencha o formulário para nos enviar uma mensagem direta.
                 </Typography>
                 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, mt: 5 }}>

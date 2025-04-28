@@ -4,8 +4,8 @@
 */
 import { useColorScheme } from '@mui/material/styles';
 import { useEffect, useState } from 'react';
-import { setTheme } from './assets/theme/AppTheme';
-import './assets/styles/Toggle.css';
+import { setTheme } from '../assets/theme/AppTheme';
+import '../assets/styles/Toggle.css';
 
 const ThemeToggle = () => {
     const { mode, setMode } = useColorScheme();

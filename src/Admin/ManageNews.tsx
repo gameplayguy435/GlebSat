@@ -32,6 +32,8 @@ import {
     PostAdd,
     PushPin,
     NotInterested,
+    ToggleOff,
+    ToggleOn,
 } from '@mui/icons-material';
 import CustomDatePicker from './components/CustomDatePicker';
 import AntSwitch from './components/AntSwitch';
@@ -79,11 +81,11 @@ const NewsContent = () => {
                     console.log('News Articles loaded:', articlesWithFreshImages);
                 } else {
                     console.error('Erro ao carregar as notícias:', data.message);
-                    enqueueSnackbar('Erro ao carregar as notícias', { variant: 'error' });
+                    enqueueSnackbar('Erro ao carregar as notícias.', { variant: 'error' });
                 }
             } catch (err) {
                 console.error('Erro ao carregar as notícias:', err);
-                enqueueSnackbar('Erro: ' + err, { variant: 'error' });
+                enqueueSnackbar('Erro ao carregar as notícias.', { variant: 'error' });
             }
         };
         
@@ -130,13 +132,13 @@ const NewsContent = () => {
 
                 return true;
             } else {
-                console.error('Ocorreu um erro ao guardar a notícia:', data.message);
-                enqueueSnackbar('Erro: ' + data.message, { variant: 'error' });
+                console.error('Erro ao guardar a notícia:', data.message);
+                enqueueSnackbar('Erro ao guardar a notícia.', { variant: 'error' });
                 return false;
             }
         } catch (err) {
             console.error('Erro ao guardar a notícia:', err);
-            enqueueSnackbar('Erro de conexão ao guardar a notícia', { variant: 'error' });
+            enqueueSnackbar('Erro de conexão ao guardar a notícia.', { variant: 'error' });
             return false;
         }
     }
@@ -144,12 +146,12 @@ const NewsContent = () => {
     const handleSave = async () => {
         if (currentNewsArticle) {
             if (!currentNewsArticle.title.trim()) {
-                enqueueSnackbar('O título é obrigatório', { variant: 'error' });
+                enqueueSnackbar('O título é obrigatório!', { variant: 'error' });
                 return;
             }
             
             if (!currentNewsArticle.content.trim()) {
-                enqueueSnackbar('O conteúdo da notícia é obrigatório', { variant: 'error' });
+                enqueueSnackbar('O conteúdo da notícia é obrigatório!', { variant: 'error' });
                 return;
             }
             if (currentNewsArticle.id === 0) {
@@ -284,7 +286,7 @@ const NewsContent = () => {
     return (
         <Box sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h4" component="h1">
+                <Typography variant="h4" component="h1" fontWeight="medium">
                     Gestão de Notícias
                 </Typography>
                 <Button 
@@ -420,12 +422,12 @@ const NewsContent = () => {
                         {currentMenuIndex !== null && newsArticles[currentMenuIndex].active 
                             ? (
                                 <>
-                                    <NotInterested fontSize="small" sx={{ mr: 1 }} />
+                                    <ToggleOff fontSize="small" sx={{ mr: 1 }} />
                                     Desativar
                                 </>
                             ) : (
                                 <>
-                                    <AddCircleOutlineRounded fontSize="small" sx={{ mr: 1 }} />
+                                    <ToggleOn fontSize="small" sx={{ mr: 1 }} />
                                     Ativar
                                 </>
                             )
