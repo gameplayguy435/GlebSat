@@ -502,7 +502,7 @@ const HomePage = () => {
 
       {/* Metrics Dashboard */}
       <Container maxWidth="xl" sx={{ mb: 8 }} id="metrics-dashboard">
-        <Typography variant="h4" fontWeight="bold" gutterBottom mb={4} className="color-primary">
+        <Typography variant="h4" fontWeight="bold" gutterBottom mb={4} className="color-primary" data-aos="fade-up">
           Monitorização Ambiental
         </Typography>
         
@@ -517,7 +517,7 @@ const HomePage = () => {
         ) : (
           <>            
             <Grid container spacing={3} sx={{ mb: 3 }}>
-              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }} data-aos="fade-up">
                 <FrontSensorChart 
                   title="Temperatura"
                   value={sensorData.temperature.current}
@@ -533,7 +533,7 @@ const HomePage = () => {
                 />
               </Grid>
               
-              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }} data-aos="fade-up">
                 <FrontSensorChart 
                   title="Pressão"
                   value={sensorData.pressure.current}
@@ -549,7 +549,7 @@ const HomePage = () => {
                 />
               </Grid>
               
-              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }} data-aos="fade-up">
                 <FrontSensorChart 
                   title="Humidade"
                   value={sensorData.humidity.current}
@@ -565,7 +565,7 @@ const HomePage = () => {
                 />
               </Grid>
               
-              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }} data-aos="fade-up">
                 <FrontSensorChart 
                   title="Altitude"
                   value={sensorData.altitude.current}
@@ -581,7 +581,7 @@ const HomePage = () => {
                 />
               </Grid>
               
-              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }} data-aos="fade-up">
                 <FrontSensorChart 
                   title="Níveis de CO₂"
                   value={sensorData.co2.current}
@@ -597,7 +597,7 @@ const HomePage = () => {
                 />
               </Grid>
               
-              <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
+              <Grid size={{ xs: 12, lg: 6, xl: 4 }} data-aos="fade-up">
                 <FrontSensorChart 
                   title="Partículas Finas"
                   value={sensorData.particles.current}
@@ -614,13 +614,14 @@ const HomePage = () => {
               </Grid>
             </Grid>
             
-            <Typography variant="h4" fontWeight="bold" gutterBottom mb={4} className="color-primary">
+            <Typography variant="h4" fontWeight="bold" gutterBottom mb={4} className="color-primary" data-aos="fade-up">
               Trajetória do Satélite
             </Typography>
             <Card 
               elevation={3} 
               sx={{ borderRadius: 2, height: '400px', overflow: 'hidden', mb: 4 }}
               className="map-card bg-tertiary"
+              data-aos="fade-up"
             >
                 <Box sx={{ height: '100%' }}>
                   <MapContainer 

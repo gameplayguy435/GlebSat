@@ -211,7 +211,6 @@ export default function FrontSensorChart({
                 strokeDasharray: '4 2',
                 opacity: 0.3,
               },
-              // Apply gradient fill to area
               [`& .MuiAreaElement-series-${title.toLowerCase().replace(/\s+/g, '-')}`]: {
                 fill: `url('#${gradientId}')`,
               }
