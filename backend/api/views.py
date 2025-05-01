@@ -1,5 +1,7 @@
 import hashlib
 import requests
+import secrets
+import datetime
 import dateutil.parser
 from django.shortcuts import render
 from django.contrib.auth.hashers import make_password
@@ -121,6 +123,210 @@ class GetUserView(APIView):
                     'message': 'Utilizador não encontrado!',
                 },
                 status=status.HTTP_200_OK,
+            )
+
+class PasswordResetView(APIView):
+    def post(self, request, format=None):
+        recaptcha_token = request.data.get('recaptcha_token', '')
+        
+        if not verify_recaptcha(recaptcha_token):
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Falha na validação do reCAPTCHA.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        email = request.data.get('email', '')
+        name = request.data.get('name', '')
+
+        if not email or not name:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Email e nome são obrigatórios.',
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # Verificar se o utilizador existe
+            user = User.objects.get(email=email, name=name)
+            
+            # Gerar token de redefinição único (válido por 1 hora)
+            token = secrets.token_urlsafe(32)
+            expiry = datetime.datetime.now() + datetime.timedelta(hours=1)
+            
+            # Armazenar temporariamente o token (pode ser melhorado com um modelo dedicado)
+            user.reset_token = token
+            user.reset_token_expiry = expiry
+            user.save()
+            
+            # Construir link de redefinição
+            reset_link = f"{URL}/admin/reset-password?token={token}&email={email}"
+            
+            # Enviar email com o link
+            email_message = EmailMessage(
+                subject='Redefinição de Palavra Passe GlebSat',
+                body=f"""
+Olá {name},
+
+Foi solicitada a redefinição da sua palavra passe para a conta GlebSat.
+Clique na ligação abaixo para definir uma nova palavra passe:
+{reset_link}
+
+Esta ligação é válida por 1 hora.
+
+Se não solicitou esta redefinição, pode ignorar este email.
+
+Atenciosamente,
+Equipa GlebSat
+                """,
+                from_email='canpansatpat@gmail.com',
+                to=[email],
+            )
+            email_message.send()
+
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Instruções de redefinição enviadas para o seu email.',
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+        except User.DoesNotExist:
+            # Por segurança, não revelar se o utilizador existe ou não
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Erro ao redefinir palavra passe.',
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'message': f'Erro ao processar pedido: {str(e)}',
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+            
+class VerifyResetTokenView(APIView):
+    def post(self, request, format=None):
+        token = request.data.get('token', '')
+        email = request.data.get('email', '')
+        
+        if not token or not email:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Token e email são obrigatórios.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        try:
+            user = User.objects.get(email=email, reset_token=token)
+            
+            # Verificar se o token ainda é válido
+            if not user.reset_token_expiry or user.reset_token_expiry < timezone.now():
+                return Response(
+                    {
+                        'success': False,
+                        'message': 'O token expirou. Por favor, solicite uma nova redefinição.'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Token válido.'
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+        except User.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Token inválido.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+class CompleteResetPasswordView(APIView):
+    def post(self, request, format=None):
+        recaptcha_token = request.data.get('recaptcha_token', '')
+        
+        if not verify_recaptcha(recaptcha_token):
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Falha na validação do reCAPTCHA.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        token = request.data.get('token', '')
+        email = request.data.get('email', '')
+        password = request.data.get('password', '')
+        
+        if not token or not email or not password:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Todos os campos são obrigatórios.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        if len(password) < 8:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'A palavra passe deve ter pelo menos 8 caracteres.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        try:
+            user = User.objects.get(email=email, reset_token=token)
+            
+            # Verificar se o token ainda é válido
+            if not user.reset_token_expiry or user.reset_token_expiry < timezone.now():
+                return Response(
+                    {
+                        'success': False,
+                        'message': 'O token expirou. Por favor, solicite uma nova redefinição.'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            # Atualizar a palavra passe
+            user.password = make_password(password=password, salt=SALT)
+            user.reset_token = None
+            user.reset_token_expiry = None
+            user.save()
+            
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Palavra passe redefinida com sucesso.'
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+        except User.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Token inválido.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 class NewsArticleView(APIView):

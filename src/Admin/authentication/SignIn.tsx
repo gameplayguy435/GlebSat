@@ -46,7 +46,10 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }));
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
-  minHeight: '100%',
+  minHeight: '100vh',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
   padding: theme.spacing(2),
   [theme.breakpoints.up('sm')]: {
     padding: theme.spacing(4),
@@ -82,6 +85,7 @@ const SignInContent = (props: any) => {
   const [passwordError, setPasswordError] = useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     console.log('isLoggedIn:', localStorage.getItem('isLoggedIn'));
@@ -102,13 +106,15 @@ const SignInContent = (props: any) => {
       return;
     }
 
-    const recaptchaToken = await validateReCaptcha('login');
-    if (!recaptchaToken) {
-      enqueueSnackbar('Erro ao validar reCAPTCHA.', { variant: 'error' });
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
+      const recaptchaToken = await validateReCaptcha('login');
+      if (!recaptchaToken) {
+        enqueueSnackbar('Erro ao validar reCAPTCHA.', { variant: 'error' });
+        return;
+      }
+
       const form = e.target as HTMLFormElement;
       const email = form.email.value;
       const password = form.password.value;
@@ -117,7 +123,9 @@ const SignInContent = (props: any) => {
         password: password,
         recaptcha_token: recaptchaToken,
       };
+
       const response = await axios.post(URL, formData);
+
       if (response.data.success) {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('email', email);
@@ -134,6 +142,8 @@ const SignInContent = (props: any) => {
     } catch (err) {
       console.error('Erro ao iniciar sessão.', err);
       enqueueSnackbar('Erro ao iniciar sessão.', { variant: 'error' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -175,7 +185,7 @@ const SignInContent = (props: any) => {
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
-      <SignInContainer direction="column" justifyContent="space-between">
+      <SignInContainer direction="column">
         <Box
           sx={{
             position: 'absolute',
@@ -250,14 +260,21 @@ const SignInContent = (props: any) => {
               control={<Checkbox value="remember" color="primary" />}
               label="Manter sessão iniciada"
             />
-            <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              onClick={validateInputs}
+              disabled={isSubmitting}
+              startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
+              sx={{
+                '&.Mui-disabled': {
+                  color: theme => theme.palette.mode === 'dark' 
+                    ? 'rgba(0, 0, 0, 0.6)'
+                    : 'rgba(255, 255, 255, 0.8)',
+                }
+              }}
             >
-              Entrar
+              {isSubmitting ? 'A processar...' : 'Entrar'}
             </Button>
             <Link
               component="button"
@@ -299,6 +316,7 @@ const SignInContent = (props: any) => {
             </Typography>
           </Box> */}
         </Card>
+        <ForgotPassword open={open} handleClose={handleClose} />
       </SignInContainer>
     </AppTheme>
   );

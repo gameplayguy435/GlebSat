@@ -16,6 +16,7 @@ import NewsArticlePage from './NewsArticlePage';
 // Back-End Dashboard
 import Dashboard from './Admin/Dashboard';
 import SignIn from './Admin/authentication/SignIn';
+import ResetPassword from './Admin/authentication/components/ResetPassword';
 // import SignUp from './Admin/authentication/SignUp'; Disabled Creating Account
 import MainGrid from './Admin/MainGrid';
 import ManageContent from './Admin/ManageContent';
@@ -48,6 +49,9 @@ function App() {
 					{/* Admin/Back-End Routes */}
 					<Route path="/admin/login" element={
 						<SignIn	/>
+					} />
+					<Route path="/admin/reset-password" element={
+						<ResetPassword />
 					} />
 					<Route path="/admin" element={
 						<Dashboard />

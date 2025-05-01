@@ -455,7 +455,7 @@ export default function ViewMissions() {
         </Button>
       </Box>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Typography component="h1" variant="h4" fontWeight="medium">
+        <Typography component="h1" variant="h4">
           {mission.name}
         </Typography>
         
@@ -562,11 +562,11 @@ export default function ViewMissions() {
           </Card>
         </Grid> */}
         
+        <Typography component="h1" variant="h4" fontWeight="medium">
+          Trajetória do Satélite
+        </Typography>
         <Grid size={{ xs: 12 }}>
           <Card sx={{ borderRadius: 2, height: '100%' }}>
-            <Typography variant="h6" sx={{ p: 2 }}>
-              Trajetória do Satélite
-            </Typography>
             <Box sx={{ height: 300, position: 'relative' }}>
               <MapContainer 
                 center={[41.0644, -8.5762]} 
@@ -600,7 +600,7 @@ export default function ViewMissions() {
         </Grid>
       </Grid>
       
-      <Typography component="h2" variant="h5" sx={{ mb: 2 }}>
+      <Typography component="h1" variant="h4" sx={{ mb: 2 }} fontWeight="medium">
         Condições Atmosféricas
       </Typography>
       
