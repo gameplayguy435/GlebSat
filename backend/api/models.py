@@ -59,7 +59,7 @@ class Image(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     image = models.ImageField(upload_to='images/')
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
     news_article = models.ForeignKey(NewsArticle, on_delete=models.SET_NULL, null=True)
     active = models.BooleanField(default=True)
 

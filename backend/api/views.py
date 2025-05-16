@@ -168,12 +168,12 @@ class PasswordResetView(APIView):
             
             # Enviar email com o link
             email_message = EmailMessage(
-                subject='Redefinição de Palavra Passe GlebSat',
+                subject='Redefinição de Palavra-Passe GlebSat',
                 body=f"""
 Olá {name},
 
-Foi solicitada a redefinição da sua palavra passe para a conta GlebSat.
-Clique na ligação abaixo para definir uma nova palavra passe:
+Foi solicitada a redefinição da sua palavra-passe para a conta GlebSat.
+Clique na ligação abaixo para definir uma nova palavra-passe:
 {reset_link}
 
 Esta ligação é válida por 1 hora.
@@ -201,7 +201,7 @@ Equipa GlebSat
             return Response(
                 {
                     'success': False,
-                    'message': 'Erro ao redefinir palavra passe.',
+                    'message': 'Erro ao redefinir palavra-passe.',
                 },
                 status=status.HTTP_200_OK,
             )
@@ -288,7 +288,7 @@ class CompleteResetPasswordView(APIView):
             return Response(
                 {
                     'success': False,
-                    'message': 'A palavra passe deve ter pelo menos 8 caracteres.'
+                    'message': 'A palavra-passe deve ter pelo menos 8 caracteres.'
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -306,7 +306,7 @@ class CompleteResetPasswordView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             
-            # Atualizar a palavra passe
+            # Atualizar a palavra-passe
             user.password = make_password(password=password, salt=SALT)
             user.reset_token = None
             user.reset_token_expiry = None
@@ -315,7 +315,7 @@ class CompleteResetPasswordView(APIView):
             return Response(
                 {
                     'success': True,
-                    'message': 'Palavra passe redefinida com sucesso.'
+                    'message': 'Palavra-passe redefinida com sucesso.'
                 },
                 status=status.HTTP_200_OK,
             )
@@ -332,7 +332,7 @@ class CompleteResetPasswordView(APIView):
 class NewsArticleView(APIView):
     def get(self, request, format=None):
         try:
-            news_articles = NewsArticle.objects.all()
+            news_articles = NewsArticle.objects.all().order_by('-published_date')
             serializer = NewsArticleSerializer(news_articles, many=True)
             return Response(
                 {
@@ -885,6 +885,71 @@ class ImportMissionRecordsView(APIView):
                 {
                     'success': False,
                     'message': f'Erro ao importar registos: {str(e)}'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+class AddMissionRecordView(APIView):
+    def post(self, request, mission_id, format=None):
+        try:
+            # Find the mission by ID
+            mission = Mission.objects.get(id=mission_id)
+            
+            # Check if mission is already completed
+            if mission.end_date:
+                return Response(
+                    {
+                        'success': False,
+                        'message': 'Cannot add records to completed missions'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            # Get the data from request body
+            record_data = request.data
+            
+            if not record_data:
+                return Response(
+                    {
+                        'success': False,
+                        'message': 'No data provided'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            # Create a new record
+            record = Record.objects.create(
+                mission=mission,
+                data=record_data
+            )
+            
+            # If mission is realtime and this is first record, set start_date
+            if mission.is_realtime and mission.start_date is None:
+                mission.start_date = timezone.now()
+                mission.save()
+            
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Record added successfully',
+                    'record_id': record.id
+                },
+                status=status.HTTP_201_CREATED,
+            )
+            
+        except Mission.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Mission not found'
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'message': f'Error adding record: {str(e)}'
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

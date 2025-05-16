@@ -16,7 +16,7 @@ import { useLocation } from 'react-router-dom';
 const mainListItems = [
   { text: 'Análise de Dados', icon: <AnalyticsRoundedIcon />, href: '/admin' },
   { text: 'Gestão de Conteúdo', icon: <DashboardCustomizeRoundedIcon />, href: '/admin/content' },
-  { text: 'Missões', icon: <AssignmentRoundedIcon />, href: '/admin/missions' },
+  { text: 'Histórico de Missões', icon: <AssignmentRoundedIcon />, href: '/admin/missions' },
   // { text: 'Tasks', icon: <AssignmentRoundedIcon />, href: '/admin/tasks' },
 ];
 

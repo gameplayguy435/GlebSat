@@ -17,7 +17,6 @@ interface MissionStatsData {
   humidity: StatsData;
   altitude: StatsData;
   co2: StatsData;
-  particles: StatsData;
 }
 
 interface ReportData {
@@ -231,15 +230,6 @@ export const generateMissionReport = (data: ReportData) => {
       { content: formatValue(data.stats.co2.end), styles: { halign: 'center' } },
       { content: data.stats.co2.change, styles: { halign: 'center' } }
     ],
-    [
-      { content: 'Partículas (µg/m³)', styles: { halign: 'left' } },
-      { content: formatValue(data.stats.particles.min), styles: { halign: 'center' } },
-      { content: formatValue(data.stats.particles.max), styles: { halign: 'center' } },
-      { content: formatValue(data.stats.particles.avg), styles: { halign: 'center' } },
-      { content: formatValue(data.stats.particles.start), styles: { halign: 'center' } },
-      { content: formatValue(data.stats.particles.end), styles: { halign: 'center' } },
-      { content: data.stats.particles.change, styles: { halign: 'center' } }
-    ]
   ];
   
   // Generate the table

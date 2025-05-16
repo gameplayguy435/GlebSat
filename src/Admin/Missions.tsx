@@ -419,7 +419,6 @@ const MissionsContent = () => {
             humidity: calculateStats(records.map(r => r.humidity_percent)),
             altitude: calculateStats(records.map(r => r.altitude_m)),
             co2: calculateStats(records.map(r => r.co2_ppm)),
-            particles: calculateStats(records.map(r => r.particles_ug_m3)),
         };
         
         return {

@@ -172,7 +172,7 @@ const SignInContent = (props: any) => {
 
     if (!password.value || password.value.length < 8) {
       setPasswordError(true);
-      setPasswordErrorMessage('A palavra passe deve conter pelo menos 8 caracteres.');
+      setPasswordErrorMessage('A palavra-passe deve conter pelo menos 8 caracteres.');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -240,7 +240,7 @@ const SignInContent = (props: any) => {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="password">Palavra passe</FormLabel>
+              <FormLabel htmlFor="password">Palavra-passe</FormLabel>
               <TextField
                 error={passwordError}
                 helperText={passwordErrorMessage}
@@ -283,7 +283,7 @@ const SignInContent = (props: any) => {
               variant="body2"
               sx={{ alignSelf: 'center' }}
             >
-              Esqueceu-se da sua palavra passe?
+              Esqueceu-se da sua palavra-passe?
             </Link>
           </Box>
           {/* <Divider>ou</Divider>

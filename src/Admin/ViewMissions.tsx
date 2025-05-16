@@ -184,15 +184,6 @@ export default function ViewMissions() {
       unit: "ppm"
     };
     
-    const particles = {
-      series: [],
-      min: Number.POSITIVE_INFINITY,
-      max: Number.NEGATIVE_INFINITY,
-      trend: 'neutral',
-      trendLabel: '0%',
-      unit: "µg/m³"
-    };
-    
     // Extract timestamps and trajectory data
     const timeLabels = [];
     const trajectoryData = [];
@@ -253,15 +244,6 @@ export default function ViewMissions() {
         }
       }
       
-      if (data.particles_ug_m3 !== undefined) {
-        const particlesValue = Number(data.particles_ug_m3);
-        if (!isNaN(particlesValue)) {
-          particles.series.push(particlesValue);
-          particles.min = Math.min(particles.min, particlesValue);
-          particles.max = Math.max(particles.max, particlesValue);
-        }
-      }
-      
       if (data.latitude !== undefined && data.longitude !== undefined) {
         const latitude = Number(data.latitude);
         const longitude = Number(data.longitude);
@@ -318,11 +300,6 @@ export default function ViewMissions() {
     co2.trend = co2Trend.trend;
     co2.trendLabel = co2Trend.trendLabel;
     
-    particles.current = particles.series.length > 0 ? particles.series[particles.series.length - 1].toFixed(1).replace('.', ',') : '0';
-    const particlesTrend = calculateTrend(particles.series);
-    particles.trend = particlesTrend.trend;
-    particles.trendLabel = particlesTrend.trendLabel;
-    
     // Return the processed sensor data
     return {
       timeLabels,
@@ -331,7 +308,6 @@ export default function ViewMissions() {
       humidity,
       altitude,
       co2,
-      particles,
       trajectoryData
     };
   };
@@ -682,22 +658,6 @@ export default function ViewMissions() {
             icon={<Co2 color="warning" />}
             minValue={sensorData.co2.min * 0.8}
             maxValue={sensorData.co2.max * 1.2}
-          />
-        </Grid>
-        
-        <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
-          <SensorChart 
-            title="Partículas Finas"
-            value={sensorData.particles.current}
-            unit={sensorData.particles.unit}
-            trend={sensorData.particles.trend}
-            trendLabel={sensorData.particles.trendLabel}
-            data={sensorData.particles.series}
-            timeLabels={sensorData.timeLabels}
-            color={theme.palette.success.main}
-            icon={<Air color="success" />}
-            minValue={0}
-            maxValue={sensorData.particles.max * 1.3}
           />
         </Grid>
       </Grid>

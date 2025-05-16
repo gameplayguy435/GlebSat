@@ -48,15 +48,6 @@ export interface SensorData {
     trend: 'up' | 'down' | 'neutral';
     trendLabel: string;
   };
-  particles: {
-    current: string;
-    unit: string;
-    min: number;
-    max: number;
-    series: SensorReading[];
-    trend: 'up' | 'down' | 'neutral';
-    trendLabel: string;
-  };
 }
 
 const DATA_POINTS = 300;
@@ -120,7 +111,6 @@ const pressureData: SensorReading[] = generateSmoothData(1013, 1005, 0.2);
 const humidityData: SensorReading[] = generateSmoothData(45, 54, 2, 0.01);
 const altitudeData: SensorReading[] = generateSmoothData(180, 440, 5);
 const co2Data: SensorReading[] = generateSmoothData(402, 460, 1);
-const particlesData: SensorReading[] = generateSmoothData(20.5, 24, 1.5, 0.03);
 
 const calculateTrend = (data: number[]): { trend: 'up' | 'down' | 'neutral'; trendLabel: string } => {
   const first = data[0];
@@ -178,14 +168,6 @@ export const demoSensorData: SensorData = {
     series: co2Data,
     ...calculateTrend(co2Data)
   },
-  particles: {
-    current: particlesData[particlesData.length - 1].toFixed(1),
-    unit: "µg/m³",
-    min: 15,
-    max: 40,
-    series: particlesData,
-    ...calculateTrend(particlesData)
-  }
 };
 
 export const demoTrajectoryData = (() => {

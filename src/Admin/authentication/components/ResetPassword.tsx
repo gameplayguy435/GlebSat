@@ -136,8 +136,8 @@ const ResetPasswordContent = (props: any) => {
         enqueueSnackbar(response.data.message || 'Erro ao redefinir palavra-passe.', { variant: 'error' });
       }
     } catch (err) {
-      console.error('Erro ao redefinir palavra passe.', err);
-      enqueueSnackbar('Erro ao redefinir palavra passe.', { variant: 'error' });
+      console.error('Erro ao redefinir palavra-passe.', err);
+      enqueueSnackbar('Erro ao redefinir palavra-passe.', { variant: 'error' });
     } finally {
       setIsSubmitting(false);
     }
@@ -151,8 +151,8 @@ const ResetPasswordContent = (props: any) => {
 
     if (!newpassword.value || newpassword.value.length < 8) {
       setNewPasswordError(true);
-      setNewPasswordErrorMessage('A palavra passe deve conter pelo menos 8 caracteres.');
-      enqueueSnackbar('A palavra passe deve conter pelo menos 8 caracteres.', { variant: 'error' });
+      setNewPasswordErrorMessage('A palavra-passe deve conter pelo menos 8 caracteres.');
+      enqueueSnackbar('A palavra-passe deve conter pelo menos 8 caracteres.', { variant: 'error' });
       isValid = false;
     } else {
       if (newpassword.value !== confirmnewpassword.value) {
@@ -195,7 +195,7 @@ const ResetPasswordContent = (props: any) => {
             variant="h4"
             sx={{ width: '100%', fontSize: 'clamp(1.5rem, 8vw, 2rem)' }}
           >
-            Redefinir Palavra Passe
+            Redefinir Palavra-Passe
           </Typography>
           <Box
             component="form"
@@ -209,7 +209,7 @@ const ResetPasswordContent = (props: any) => {
             }}
           >
             <FormControl>
-              <FormLabel htmlFor="newpassword">Nova palavra passe</FormLabel>
+              <FormLabel htmlFor="newpassword">Nova palavra-passe</FormLabel>
               <TextField
                 error={newPasswordError}
                 helperText={newPasswordErrorMessage}
@@ -226,7 +226,7 @@ const ResetPasswordContent = (props: any) => {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="confirmnewpassword">Confirmar nova palavra passe</FormLabel>
+              <FormLabel htmlFor="confirmnewpassword">Confirmar nova palavra-passe</FormLabel>
               <TextField
                 error={newPasswordError}
                 helperText={newPasswordErrorMessage}

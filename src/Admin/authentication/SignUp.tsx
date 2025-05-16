@@ -109,7 +109,7 @@ const SignUp = (props: any) => {
 
     if (!password.value || password.value.length < 8) {
       setPasswordError(true);
-      setPasswordErrorMessage('A palavra passe deve conter pelo menos 8 caracteres.');
+      setPasswordErrorMessage('A palavra-passe deve conter pelo menos 8 caracteres.');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -225,7 +225,7 @@ const SignUp = (props: any) => {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="password">Palavra passe</FormLabel>
+              <FormLabel htmlFor="password">Palavra-passe</FormLabel>
               <TextField
                 required
                 fullWidth
@@ -241,7 +241,7 @@ const SignUp = (props: any) => {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="confirmPassword">Confirmar palavra passe</FormLabel>
+              <FormLabel htmlFor="confirmPassword">Confirmar palavra-passe</FormLabel>
               <TextField
                 required
                 fullWidth

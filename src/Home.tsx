@@ -46,7 +46,7 @@ const HomePage = () => {
   const [sensorData, setSensorData] = useState(null);
   const [trajectoryData, setTrajectoryData] = useState([]);
   
-  const targetDate = new Date('2025-05-12T00:00:00');
+  const targetDate = new Date('2025-05-28T09:00:00');
   
   useEffect(() => {
     fixLeafletIcon();
@@ -168,15 +168,6 @@ const HomePage = () => {
       unit: "ppm"
     };
     
-    const particles = {
-      series: [],
-      min: Number.POSITIVE_INFINITY,
-      max: Number.NEGATIVE_INFINITY,
-      trend: 'neutral',
-      trendLabel: '0%',
-      unit: "µg/m³"
-    };
-    
     // Extract timestamps and trajectory data
     const timeLabels = [];
     const trajectoryData = [];
@@ -237,15 +228,6 @@ const HomePage = () => {
         }
       }
       
-      if (data.particles_ug_m3 !== undefined) {
-        const particlesValue = Number(data.particles_ug_m3);
-        if (!isNaN(particlesValue)) {
-          particles.series.push(particlesValue);
-          particles.min = Math.min(particles.min, particlesValue);
-          particles.max = Math.max(particles.max, particlesValue);
-        }
-      }
-      
       if (data.latitude !== undefined && data.longitude !== undefined) {
         const latitude = Number(data.latitude);
         const longitude = Number(data.longitude);
@@ -302,11 +284,6 @@ const HomePage = () => {
     co2.trend = co2Trend.trend;
     co2.trendLabel = co2Trend.trendLabel;
     
-    particles.current = particles.series.length > 0 ? particles.series[particles.series.length - 1].toFixed(1).replace('.', ',') : '0';
-    const particlesTrend = calculateTrend(particles.series);
-    particles.trend = particlesTrend.trend;
-    particles.trendLabel = particlesTrend.trendLabel;
-    
     // Return the processed sensor data
     return {
       timeLabels,
@@ -315,7 +292,6 @@ const HomePage = () => {
       humidity,
       altitude,
       co2,
-      particles,
       trajectoryData
     };
   };
@@ -432,7 +408,7 @@ const HomePage = () => {
                 ) : (
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h5" gutterBottom>
-                      Próximo Lançamento da Missão
+                      Apresentação do GlebSat
                     </Typography>
                     
                     <AccessTime sx={{ fontSize: 40, my: 2 }} className="accent-icon" />
@@ -490,7 +466,7 @@ const HomePage = () => {
                     </Box>
                     
                     <Typography variant="body2" sx={{ mt: 3, opacity: 0.7 }}>
-                      12 de Maio de 2025 • Carvalhos, Vila Nova de Gaia
+                      28 de Maio de 2025 • Carvalhos, Vila Nova de Gaia
                     </Typography>
                   </Box>
                 )}
@@ -594,22 +570,6 @@ const HomePage = () => {
                   icon={<Co2 color="warning" />}
                   minValue={sensorData.co2.min * 0.8}
                   maxValue={sensorData.co2.max * 1.2}
-                />
-              </Grid>
-              
-              <Grid size={{ xs: 12, lg: 6, xl: 4 }} data-aos="fade-up">
-                <FrontSensorChart 
-                  title="Partículas Finas"
-                  value={sensorData.particles.current}
-                  unit={sensorData.particles.unit}
-                  trend={sensorData.particles.trend}
-                  trendLabel={sensorData.particles.trendLabel}
-                  data={sensorData.particles.series}
-                  timeLabels={sensorData.timeLabels}
-                  color={theme.palette.success.main}
-                  icon={<Air color="success" />}
-                  minValue={0}
-                  maxValue={sensorData.particles.max * 1.3}
                 />
               </Grid>
             </Grid>

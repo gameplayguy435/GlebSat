@@ -53,7 +53,6 @@ export default function DataAnalysis() {
     humidity: { series: [], min: 0, max: 100, unit: "%" },
     altitude: { series: [], min: 0, max: 500, unit: "m" },
     co2: { series: [], min: 300, max: 1500, unit: "ppm" },
-    particles: { series: [], min: 0, max: 50, unit: "µg/m³" }
   });
   const [trajectoryData, setTrajectoryData] = useState([]);
   
@@ -158,12 +157,6 @@ export default function DataAnalysis() {
         max: -Infinity,
         unit: "ppm"
       },
-      particles: { 
-        series: [],
-        min: Infinity,
-        max: -Infinity,
-        unit: "µg/m³"
-      }
     };
     
     const trajectoryData = [];
@@ -181,7 +174,6 @@ export default function DataAnalysis() {
       const humidityData = [];
       const altitudeData = [];
       const co2Data = [];
-      const particlesData = [];
       const trajectoryPoints = [];
       const timePoints = [];
       
@@ -237,15 +229,6 @@ export default function DataAnalysis() {
             co2Data.push(co2Value);
             sensorData.co2.min = Math.min(sensorData.co2.min, co2Value);
             sensorData.co2.max = Math.max(sensorData.co2.max, co2Value);
-          }
-        }
-        
-        if (data.particles_ug_m3 !== undefined) {
-          const particlesValue = Number(data.particles_ug_m3);
-          if (!isNaN(particlesValue) && isFinite(particlesValue)) {
-            particlesData.push(particlesValue);
-            sensorData.particles.min = Math.min(sensorData.particles.min, particlesValue);
-            sensorData.particles.max = Math.max(sensorData.particles.max, particlesValue);
           }
         }
         
@@ -306,14 +289,6 @@ export default function DataAnalysis() {
         });
       }
       
-      if (particlesData.length > 0) {
-        sensorData.particles.series.push({
-          name: mission.name,
-          data: particlesData,
-          color: missionColor
-        });
-      }
-      
       // Add trajectory data if available
       if (trajectoryPoints.length > 0) {
         trajectoryData.push({
@@ -348,11 +323,6 @@ export default function DataAnalysis() {
     if (!isFinite(sensorData.co2.min) || !isFinite(sensorData.co2.max)) {
       sensorData.co2.min = 300;
       sensorData.co2.max = 1500;
-    }
-    
-    if (!isFinite(sensorData.particles.min) || !isFinite(sensorData.particles.max)) {
-      sensorData.particles.min = 0;
-      sensorData.particles.max = 50;
     }
     
     return { sensorData, trajectoryData };
@@ -587,18 +557,6 @@ export default function DataAnalysis() {
                 icon={<Co2 color="warning" />}
                 minValue={sensorsData.co2.min > 0 ? sensorsData.co2.min * 0.9 : 300}
                 maxValue={sensorsData.co2.max * 1.1}
-              />
-            </Grid>
-            
-            <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
-              <MultiSensorChart 
-                title="Partículas Finas"
-                unit={sensorsData.particles.unit}
-                seriesData={sensorsData.particles.series}
-                timeLabels={sensorsData.timeLabels.length > 0 ? sensorsData.timeLabels : ['0s']}
-                icon={<Air color="success" />}
-                minValue={0}
-                maxValue={sensorsData.particles.max * 1.3}
               />
             </Grid>
           </Grid>

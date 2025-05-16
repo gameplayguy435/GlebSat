@@ -97,7 +97,7 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
         enqueueSnackbar(data.message || 'Erro ao processar o pedido.', { variant: 'error' });
       }
     } catch (error) {
-      console.error('Erro ao redefinir palavra passe:', error);
+      console.error('Erro ao redefinir palavra-passe:', error);
       enqueueSnackbar('Erro de conexão ao servidor.', { variant: 'error' });
     } finally {
       setIsSubmitting(false);
@@ -116,12 +116,12 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
         },
       }}
     >
-      <DialogTitle>Redefinir palavra passe</DialogTitle>
+      <DialogTitle>Redefinir palavra-passe</DialogTitle>
       <DialogContent
         sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', pt: 2 }}
       >
         <DialogContentText>
-          Indique as suas credenciais e será enviado um link para redefinir a sua palavra passe.
+          Indique as suas credenciais e será enviado um link para redefinir a sua palavra-passe.
         </DialogContentText>
         <FormControl>
           <FormLabel htmlFor="fullname" sx={{ mb: 0 }}>Nome completo</FormLabel>
