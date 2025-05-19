@@ -934,7 +934,7 @@ class AddMissionRecordView(APIView):
                     'message': 'Record added successfully',
                     'record_id': record.id
                 },
-                status=status.HTTP_201_CREATED,
+                status=status.HTTP_200_OK,
             )
             
         except Mission.DoesNotExist:
@@ -950,6 +950,41 @@ class AddMissionRecordView(APIView):
                 {
                     'success': False,
                     'message': f'Error adding record: {str(e)}'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+            
+class GetCurrentMissionView(APIView):
+    def post(self, request, format=None):
+        try:
+            current_mission = Mission.objects.filter(
+                start_date__isnull=True,
+                is_realtime=True
+            ).last()
+
+            if current_mission:
+                return Response(
+                    {
+                        'success': True,
+                        'message': 'Current active mission found',
+                        'mission_id': current_mission.id,
+                        'timestamp': timezone.now()
+                    },
+                    status=status.HTTP_200_OK,
+                )
+        except Mission.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'No active mission found'
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'message': f'Error fetching current mission: {str(e)}'
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

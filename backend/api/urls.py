@@ -28,6 +28,8 @@ urlpatterns = [
     path('mission/<int:mission_id>/update', UpdateMissionView.as_view(), name='mission_update'),
     path('mission/<int:mission_id>/records', MissionRecordsView.as_view(), name='mission_records'),
     path('mission/<int:mission_id>/records/import', ImportMissionRecordsView.as_view(), name='import_mission_records'),
+    
+    path('mission/current', GetCurrentMissionView.as_view(), name='current_mission'),
     path('mission/<int:mission_id>/add-record', AddMissionRecordView.as_view(), name='add_mission_record'),
 
     
