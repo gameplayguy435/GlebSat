@@ -110,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'BST'
 
 USE_I18N = True
 
@@ -131,7 +131,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
-ALLOWED_HOSTS = ['192.168.1.37', '127.0.0.1', 'localhost', '192.168.1.21']
+ALLOWED_HOSTS = ['192.168.1.20', '127.0.0.1', 'localhost', '192.168.1.21']
 
 CORS_ALLOWED_CREDENTIALS = True
 

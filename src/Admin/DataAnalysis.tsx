@@ -56,7 +56,6 @@ export default function DataAnalysis() {
   });
   const [trajectoryData, setTrajectoryData] = useState([]);
   
-  // Define mission colors
   const missionColors = [
     theme.palette.primary.main,
     theme.palette.secondary.main,
@@ -67,25 +66,21 @@ export default function DataAnalysis() {
     fixLeafletIcon();
   }, []);
 
-  // Fetch the last 3 completed missions
   useEffect(() => {
     const fetchMissionsData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch all missions
         const missionsResponse = await fetch(`${API_URL}/mission`);
         const missionsData = await missionsResponse.json();
         
         if (missionsData.success) {
-          // 2. Filter completed missions (with end_date)
           const completedMissions = missionsData.missions
             .filter(mission => mission.end_date)
             .sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime())
-            .slice(0, 3); // Take the 3 most recent
+            .slice(0, 3);
             
           setMissions(completedMissions);
           
-          // 3. For each mission, fetch its records
           const missionsWithData = await Promise.all(
             completedMissions.map(async (mission) => {
               const recordsResponse = await fetch(`${API_URL}/mission/${mission.id}/records`);
@@ -104,7 +99,6 @@ export default function DataAnalysis() {
             })
           );
           
-          // 4. Process all missions data
           const processedData = processAllMissionsData(missionsWithData, missionColors);
           setSensorsData(processedData.sensorData);
           setTrajectoryData(processedData.trajectoryData);
@@ -122,9 +116,16 @@ export default function DataAnalysis() {
     fetchMissionsData();
   }, []);
 
-  // Process data from multiple missions
+  const calculateTimeDifference = (timestamp, missionStartDate) => {
+    if (!timestamp || !missionStartDate) return 0;
+    
+    const recordTime = new Date(timestamp);
+    const startTime = new Date(missionStartDate);
+    
+    return Math.floor((recordTime.getTime() - startTime.getTime()) / 1000);
+  };
+
   const processAllMissionsData = (missionsWithData, colors) => {
-    // Initialize data structure
     const sensorData = {
       timeLabels: [],
       temperature: { 
@@ -162,13 +163,11 @@ export default function DataAnalysis() {
     const trajectoryData = [];
     let maxTimePoints = 0;
     
-    // Process each mission separately
     missionsWithData.forEach((mission, missionIndex) => {
       if (!mission.records || mission.records.length === 0) return;
       
       const missionColor = colors[missionIndex % colors.length];
       
-      // Prepare data structures for each sensor
       const tempData = [];
       const pressureData = [];
       const humidityData = [];
@@ -177,16 +176,16 @@ export default function DataAnalysis() {
       const trajectoryPoints = [];
       const timePoints = [];
       
-      // Process each record in this mission
+      const missionStartDate = mission.start_date;
+      
       mission.records.forEach((record, index) => {
         const data = record.data;
         
-        // Extract timestamp for labels
-        if (data.timestamp) {
-          timePoints.push(`${index}s`);
+        if (data.timestamp && missionStartDate) {
+          const timeDiff = calculateTimeDifference(data.timestamp, missionStartDate);
+          timePoints.push(`${timeDiff}s`);
         }
         
-        // Extract sensor data
         if (data.temperature_c !== undefined) {
           const tempValue = Number(data.temperature_c);
           if (!isNaN(tempValue) && isFinite(tempValue)) {
@@ -232,7 +231,6 @@ export default function DataAnalysis() {
           }
         }
         
-        // Extract trajectory data
         if (data.latitude !== undefined && data.longitude !== undefined) {
           const latitude = Number(data.latitude);
           const longitude = Number(data.longitude);
@@ -242,13 +240,11 @@ export default function DataAnalysis() {
         }
       });
       
-      // Update maximum timepoints to ensure consistent chart length
       if (timePoints.length > maxTimePoints) {
         maxTimePoints = timePoints.length;
         sensorData.timeLabels = timePoints;
       }
       
-      // Add mission data to the sensor data collections if we have data
       if (tempData.length > 0) {
         sensorData.temperature.series.push({
           name: mission.name,
@@ -289,7 +285,6 @@ export default function DataAnalysis() {
         });
       }
       
-      // Add trajectory data if available
       if (trajectoryPoints.length > 0) {
         trajectoryData.push({
           name: mission.name,
@@ -299,7 +294,6 @@ export default function DataAnalysis() {
       }
     });
 
-    // Handle empty or invalid min/max values
     if (!isFinite(sensorData.temperature.min) || !isFinite(sensorData.temperature.max)) {
       sensorData.temperature.min = 0;
       sensorData.temperature.max = 30;

@@ -687,6 +687,7 @@ class CreateMissionView(APIView):
                     'message': 'Missão inserida com sucesso!',
                     'missions': serializer.data,
                 },
+                status=status.HTTP_200_OK,
             )
         else:
             message = ""
@@ -813,7 +814,6 @@ class ImportMissionRecordsView(APIView):
                     key=lambda x: x['data'].get('timestamp', 0)
                 )
                 
-                # Get first and last timestamp for start and end dates
                 first_timestamp = None
                 last_timestamp = None
                 
@@ -821,17 +821,12 @@ class ImportMissionRecordsView(APIView):
                     if 'timestamp' in record['data']:
                         timestamp_str = record['data']['timestamp']
                         try:
-                            # Parse timestamp and explicitly preserve its timezone (or assume local timezone)
                             timestamp = dateutil.parser.parse(timestamp_str)
                             
-                            # Make timestamp timezone-aware with the correct timezone
-                            # Django uses UTC internally, so convert to the same timezone as Django's settings
                             if timestamp.tzinfo is None:
-                                # Attach Portugal timezone (Europe/Lisbon) to the naive timestamp
                                 from django.utils import timezone
                                 timestamp = timezone.make_aware(timestamp)
                                 
-                            # Now Django won't adjust the time when storing/retrieving
                             if first_timestamp is None or timestamp < first_timestamp:
                                 first_timestamp = timestamp
                             if last_timestamp is None or timestamp > last_timestamp:
@@ -892,20 +887,18 @@ class ImportMissionRecordsView(APIView):
 class AddMissionRecordView(APIView):
     def post(self, request, mission_id, format=None):
         try:
-            # Find the mission by ID
             mission = Mission.objects.get(id=mission_id)
             
-            # Check if mission is already completed
             if mission.end_date:
                 return Response(
                     {
                         'success': False,
+                        'finished': True,
                         'message': 'Cannot add records to completed missions'
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             
-            # Get the data from request body
             record_data = request.data
             
             if not record_data:
@@ -917,16 +910,10 @@ class AddMissionRecordView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             
-            # Create a new record
             record = Record.objects.create(
                 mission=mission,
                 data=record_data
             )
-            
-            # If mission is realtime and this is first record, set start_date
-            if mission.is_realtime and mission.start_date is None:
-                mission.start_date = timezone.now()
-                mission.save()
             
             return Response(
                 {
@@ -963,15 +950,25 @@ class GetCurrentMissionView(APIView):
             ).last()
 
             if current_mission:
+                current_mission.start_date = timezone.now()
+                current_mission.save()
+                current_time = timezone.now() + timezone.timedelta(hours=1)
                 return Response(
                     {
                         'success': True,
                         'message': 'Current active mission found',
                         'mission_id': current_mission.id,
-                        'timestamp': timezone.now()
+                        'timestamp': current_time
                     },
                     status=status.HTTP_200_OK,
                 )
+            return Response(
+                {
+                    'success': False,
+                    'message': 'No active mission found'
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
         except Mission.DoesNotExist:
             return Response(
                 {
@@ -985,6 +982,81 @@ class GetCurrentMissionView(APIView):
                 {
                     'success': False,
                     'message': f'Error fetching current mission: {str(e)}'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+            
+class FinishMissionView(APIView):
+    def post(self, request, mission_id, format=None):
+        try:
+            mission = Mission.objects.get(id=mission_id)
+            
+            if mission.end_date:
+                return Response(
+                    {
+                        'success': False,
+                        'message': 'Missão já foi finalizada'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            records = Record.objects.filter(mission=mission).order_by('created_at')
+            
+            if not records.exists():
+                return Response(
+                    {
+                        'success': False,
+                        'message': 'Não existem registos para esta missão'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            last_record = records.last()
+            last_timestamp = None
+            
+            if 'timestamp' in last_record.data:
+                timestamp_str = last_record.data['timestamp']
+                try:                    
+                    last_timestamp = dateutil.parser.parse(timestamp_str)
+                    
+                    if last_timestamp.tzinfo is None:
+                        last_timestamp = timezone.make_aware(last_timestamp)
+                        
+                except Exception as e:
+                    last_timestamp = timezone.now()
+            else:
+                last_timestamp = last_record.created_at
+            
+            mission.end_date = last_timestamp
+            
+            if mission.start_date:
+                duration = last_timestamp - mission.start_date
+                mission.duration = duration
+            
+            mission.save()
+            serializer = MissionSerializer(mission)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Missão finalizada com sucesso!',
+                    'mission': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+            
+        except Mission.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Missão não encontrada'
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    'success': False,
+                    'message': f'Erro ao finalizar missão: {str(e)}'
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

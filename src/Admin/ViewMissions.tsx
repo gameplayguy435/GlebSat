@@ -1,31 +1,36 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 import { 
-  Card, CardContent, CardMedia, CircularProgress, Button,
-  useTheme, Alert
+  Box, 
+  Typography, 
+  Button, 
+  Card, 
+  CircularProgress, 
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Grid2 as Grid
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Air,
-  ArrowBack,
-  AssignmentRounded,
-  Co2,
-  Compress,
-  Height,
-  HourglassBottomRounded,
-  HourglassTopRounded,
-  Thermostat,
-  Timer,
-  Waves,
+import { 
+  ArrowBack, 
+  AssignmentRounded, 
+  HourglassTopRounded, 
+  HourglassBottomRounded, 
+  Timer, 
+  Thermostat, 
+  Compress, 
+  Waves, 
+  Height, 
+  Co2 
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
-import { demoSensorData, demoTrajectoryData } from './internals/data/sensorData';
 import SensorChart from './components/SensorChart';
+import { demoSensorData, demoTrajectoryData } from './internals/data/sensorData';
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
@@ -58,45 +63,41 @@ export default function ViewMissions() {
   const [sensorData, setSensorData] = useState(null);
   const [trajectoryData, setTrajectoryData] = useState([]);
   const [isLive, setIsLive] = useState(true);
+  const [finishDialogOpen, setFinishDialogOpen] = useState(false);
+  const [finishingMission, setFinishingMission] = useState(false);
 
   useEffect(() => {
     fixLeafletIcon();
   }, []);
 
-  // Update the useEffect to fetch mission data
   useEffect(() => {
     const fetchMissionData = async () => {
       setLoading(true);
       try {
-        // Fetch mission details
         const missionResponse = await fetch(`${API_URL}/mission/${missionId}`);
         const missionData = await missionResponse.json();
         
         if (missionData.success) {
           setMission(missionData.mission);
+          console.log("Mission data:", missionData.mission);
 
           const isRealtimeMission = missionData.mission.is_realtime;
           setIsLive(isRealtimeMission && !missionData.mission.end_date);
           
-          // Fetch records for the mission
           const recordsResponse = await fetch(`${API_URL}/mission/${missionId}/records`);
           const recordsData = await recordsResponse.json();
           
           if (recordsData.success && recordsData.records.length > 0) {
-            // Process the records into sensor data
-            const processedData = processSensorData(recordsData.records);
+            const processedData = processSensorData(recordsData.records, missionData.mission.start_date);
             setSensorData(processedData);
             
-            // Extract trajectory data
             const trajectory = processedData.trajectoryData;
             if (trajectory && trajectory.length > 0) {
               setTrajectoryData(trajectory);
             } else {
-              // Fallback to demo data
               setTrajectoryData(demoTrajectoryData);
             }
           } else {
-            // No real data available, use demo data
             setSensorData(demoSensorData);
             setTrajectoryData(demoTrajectoryData);
           }
@@ -107,10 +108,9 @@ export default function ViewMissions() {
         console.error("Error fetching mission data:", err);
         setError("Erro ao carregar os dados da missão");
         
-        // Use demo data as fallback
         const fakeMission = {
           id: missionId || 1,
-          name: "Missão Estratosférica Alpha",
+          name: "GlebSat Alpha",
           start_date: new Date().toISOString(),
           end_date: isLive ? null : new Date(Date.now() + 300000).toISOString(),
           duration: isLive ? null : "00:05:00"
@@ -136,9 +136,16 @@ export default function ViewMissions() {
     };
   }, [missionId, isLive]);
 
-  // Add this function to process the records into sensor data
-  const processSensorData = (records) => {
-    // Initialize data arrays for each sensor type
+  const calculateTimeDifference = (timestamp, missionStartDate) => {
+    if (!timestamp || !missionStartDate) return 0;
+    
+    const recordTime = new Date(timestamp.replace(' ', 'T'));
+    const startTime = new Date(missionStartDate);
+    
+    return Math.floor((recordTime.getTime() - startTime.getTime()) / 1000);
+  };
+
+  const processSensorData = (records, missionStartDate) => {
     const temperature = {
       series: [],
       min: Number.POSITIVE_INFINITY,
@@ -184,19 +191,17 @@ export default function ViewMissions() {
       unit: "ppm"
     };
     
-    // Extract timestamps and trajectory data
     const timeLabels = [];
     const trajectoryData = [];
+
+    console.log(missionStartDate);
     
-    // Process each record
     records.forEach((record) => {
       const data = record.data;
       
-      // Extract timestamp for labels
-      if (data.timestamp) {
-        const date = new Date(data.timestamp);
-        const index = timeLabels.length;
-        timeLabels.push(`${index}s`);
+      if (data.timestamp && missionStartDate) {
+        const timeDiff = calculateTimeDifference(data.timestamp, missionStartDate);
+        timeLabels.push(`${timeDiff}s`);
       }
       
       if (data.temperature_c !== undefined) {
@@ -253,7 +258,6 @@ export default function ViewMissions() {
       }
     });
     
-    // Calculate trends for each sensor
     const calculateTrend = (series) => {
       if (series.length < 2) return { trend: 'neutral', trendLabel: '0%' };
       
@@ -274,7 +278,6 @@ export default function ViewMissions() {
       };
     };
     
-    // Set current values and trends
     temperature.current = temperature.series.length > 0 ? temperature.series[temperature.series.length - 1].toFixed(1).replace('.', ',') : '0';
     const tempTrend = calculateTrend(temperature.series);
     temperature.trend = tempTrend.trend;
@@ -300,7 +303,6 @@ export default function ViewMissions() {
     co2.trend = co2Trend.trend;
     co2.trendLabel = co2Trend.trendLabel;
     
-    // Return the processed sensor data
     return {
       timeLabels,
       temperature,
@@ -378,24 +380,62 @@ export default function ViewMissions() {
     }
   };
 
-  const handleEndMission = () => {
-    setIsLive(false);
-    setMission(prev => ({
-      ...prev,
-      end_date: new Date().toISOString(),
-      duration: "00:05:00"
-    }));
+  const handleFinishMissionClick = () => {
+    setFinishDialogOpen(true);
+  };
+
+  const handleFinishMissionConfirm = async () => {
+    setFinishingMission(true);
+    
+    try {
+      const response = await fetch(`${API_URL}/mission/${missionId}/finish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setMission(result.mission);
+        setIsLive(false);
+        setFinishDialogOpen(false);
+        // enqueueSnackbar
+        enqueueSnackbar();
+        console.log('Missão terminada com sucesso!');
+      } else {
+        console.error('Erro ao terminar missão:', result.message);
+        setError(result.message);
+      }
+    } catch (err) {
+      console.error('Error finishing mission:', err);
+      setError('Erro ao terminar a missão');
+    } finally {
+      setFinishingMission(false);
+    }
+  };
+
+  const handleFinishMissionCancel = () => {
+    setFinishDialogOpen(false);
   };
 
   useEffect(() => {
     if (isLive && mission?.start_date) {
       const interval = setInterval(() => {
         setMission(prev => ({...prev}));
-      }, 1000);
+      }, 5000);
       
       return () => clearInterval(interval);
     }
   }, [isLive, mission]);
+
+  const getMapCenter = () => {
+    if (trajectoryData.length > 0) {
+      return trajectoryData[trajectoryData.length - 1];
+    }
+    return [41.0644, -8.5762];
+  };
 
   if (loading) {
     return (
@@ -416,19 +456,26 @@ export default function ViewMissions() {
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ mb: 3 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate('/admin/missions')}
-          startIcon={<ArrowBack />}
-          sx={{
-            borderRadius: 1,
-            textTransform: 'none',
-            fontWeight: 'normal',
-          }}
-        >
-          Ver Missões
-        </Button>
+        {!isLive && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate('/admin/missions')}
+            startIcon={<ArrowBack />}
+            disabled={isLive}
+            sx={{
+              borderRadius: 1,
+              textTransform: 'none',
+              fontWeight: 'normal',
+              ...(isLive && {
+                opacity: 0.5,
+                cursor: 'not-allowed'
+              })
+            }}
+          >
+            Ver Missões
+          </Button>
+        )}
       </Box>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Typography component="h1" variant="h4">
@@ -439,9 +486,10 @@ export default function ViewMissions() {
           <Button 
             variant="contained" 
             color="error" 
-            onClick={handleEndMission}
+            onClick={handleFinishMissionClick}
+            disabled={finishingMission}
           >
-            Terminar Missão
+            {finishingMission ? 'A terminar...' : 'Terminar Missão'}
           </Button>
         )}
       </Box>
@@ -517,27 +565,7 @@ export default function ViewMissions() {
         </Grid>
       </Grid>
       
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        {/* <Grid size={{ xs: 12, md: 6 }}>
-          <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
-            <Typography variant="h6" sx={{ p: 2 }}>
-              Última Imagem Recebida
-            </Typography>
-            <CardMedia
-              component="img"
-              height="300"
-              image="/images/glebsat-front.png"
-              alt="Última imagem da missão"
-              sx={{ objectFit: 'cover' }}
-            />
-            <CardContent sx={{ py: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                Recebida há 45 segundos
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid> */}
-        
+      <Grid container spacing={3} sx={{ mb: 3 }}>        
         <Typography component="h1" variant="h4" fontWeight="medium">
           Trajetória do Satélite
         </Typography>
@@ -545,7 +573,8 @@ export default function ViewMissions() {
           <Card sx={{ borderRadius: 2, height: '100%' }}>
             <Box sx={{ height: 300, position: 'relative' }}>
               <MapContainer 
-                center={[41.0644, -8.5762]} 
+                key={`map-${trajectoryData.length}`}
+                center={getMapCenter()} 
                 zoom={15} 
                 style={{ height: '100%', width: '100%', borderRadius: 0 }}
               >
@@ -565,6 +594,8 @@ export default function ViewMissions() {
                     <Marker position={trajectoryData[trajectoryData.length - 1]}>
                       <Popup>
                         Posição Atual <br/>
+                        Latitude: {trajectoryData[trajectoryData.length - 1][0].toFixed(6)} <br/>
+                        Longitude: {trajectoryData[trajectoryData.length - 1][1].toFixed(6)} <br/>
                         Altitude: {sensorData.altitude.current} {sensorData.altitude.unit}
                       </Popup>
                     </Marker>
@@ -661,6 +692,78 @@ export default function ViewMissions() {
           />
         </Grid>
       </Grid>
+
+      <Dialog
+          open={finishDialogOpen}
+          onClose={handleFinishMissionCancel}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+              sx: {
+                  borderRadius: 2,
+                  backgroundImage: 'none',
+                  overflow: 'hidden',
+                  boxShadow: 'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
+              },
+          }}
+      >
+          <DialogTitle
+              sx={{
+                  px: 4,
+                  py: 3,
+                  fontSize: '1.5rem',
+                  fontWeight: 600,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+              }}
+          >
+              Terminar Missão
+          </DialogTitle>
+          <DialogContent sx={{ p: 0 }}>
+              <Typography variant="body1" sx={{ m: 4 }}>
+                Tem a certeza que pretende terminar a missão "{mission?.name}"?
+              </Typography>
+          </DialogContent>
+          <DialogActions
+              sx={{
+                  px: 4,
+                  py: 3,
+                  borderTop: '1px solid',
+                  borderColor: 'divider',
+                  gap: 1,
+              }}
+          >
+              <Button
+                  onClick={handleFinishMissionCancel}
+                  disabled={finishingMission}
+                  variant="outlined"
+                  sx={{
+                      px: 3,
+                      py: 1,
+                      borderRadius: 1,
+                      textTransform: 'none',
+                      fontWeight: 'normal',
+                  }}
+              >
+                  Cancelar
+              </Button>
+              <Button
+                  onClick={handleFinishMissionConfirm} 
+                  variant="contained" 
+                  color="error"
+                  disabled={finishingMission}
+                  sx={{
+                      px: 3,
+                      py: 1,
+                      borderRadius: 1,
+                      textTransform: 'none',
+                      fontWeight: 'normal',
+                  }}
+              >
+                  {finishingMission ? 'A terminar...' : 'Terminar Missão'}
+              </Button>
+          </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -31,6 +31,7 @@ urlpatterns = [
     
     path('mission/current', GetCurrentMissionView.as_view(), name='current_mission'),
     path('mission/<int:mission_id>/add-record', AddMissionRecordView.as_view(), name='add_mission_record'),
+    path('mission/<int:mission_id>/finish', FinishMissionView.as_view(), name='finish_mission'),
 
     
     path('contact', ContactView.as_view(), name='contact'),

@@ -3,11 +3,6 @@ import {
   Box, Container, Typography, Grid2 as Grid, Card, CardContent, 
   Paper, Button, LinearProgress, useTheme, CircularProgress, Alert
 } from '@mui/material';
-import {
-  LineChart, Line, BarChart, Bar, AreaChart, Area,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
-} from 'recharts';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -51,16 +46,13 @@ const HomePage = () => {
   useEffect(() => {
     fixLeafletIcon();
     
-    // Fetch the latest completed mission data
     const fetchLatestMissionData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch all missions
         const missionsResponse = await fetch(`${API_URL}/mission`);
         const missionsData = await missionsResponse.json();
         
         if (missionsData.success && missionsData.missions.length > 0) {
-          // 2. Filter completed missions (with end_date)
           const completedMissions = missionsData.missions
             .filter(mission => mission.end_date)
             .sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime());
@@ -69,16 +61,13 @@ const HomePage = () => {
             const latestMission = completedMissions[0];
             setMission(latestMission);
             
-            // 3. Fetch records for the mission
             const recordsResponse = await fetch(`${API_URL}/mission/${latestMission.id}/records`);
             const recordsData = await recordsResponse.json();
             
             if (recordsData.success && recordsData.records.length > 0) {
-              // Process the records into sensor data
-              const processedData = processSensorData(recordsData.records);
+              const processedData = processSensorData(recordsData.records, latestMission.start_date);
               setSensorData(processedData);
               
-              // Extract trajectory data
               const trajectory = processedData.trajectoryData;
               if (trajectory && trajectory.length > 0) {
                 setTrajectoryData(trajectory);
@@ -121,8 +110,16 @@ const HomePage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const processSensorData = (records) => {
-    // Initialize data arrays for each sensor type
+  const calculateTimeDifference = (timestamp, missionStartDate) => {
+    if (!timestamp || !missionStartDate) return 0;
+    
+    const recordTime = new Date(timestamp);
+    const startTime = new Date(missionStartDate);
+    
+    return Math.floor((recordTime.getTime() - startTime.getTime()) / 1000);
+  };
+
+  const processSensorData = (records, missionStartDate) => {
     const temperature = {
       series: [],
       min: Number.POSITIVE_INFINITY,
@@ -177,10 +174,9 @@ const HomePage = () => {
       const data = record.data;
       
       // Extract timestamp for labels
-      if (data.timestamp) {
-        const date = new Date(data.timestamp);
-        const index = timeLabels.length;
-        timeLabels.push(`${index}s`);
+      if (data.timestamp && missionStartDate) {
+        const timeDiff = calculateTimeDifference(data.timestamp, missionStartDate);
+        timeLabels.push(`${timeDiff}s`);
       }
       
       if (data.temperature_c !== undefined) {
@@ -476,7 +472,6 @@ const HomePage = () => {
         </Container>
       </Box>
 
-      {/* Metrics Dashboard */}
       <Container maxWidth="xl" sx={{ mb: 8 }} id="metrics-dashboard">
         <Typography variant="h4" fontWeight="bold" gutterBottom mb={4} className="color-primary" data-aos="fade-up">
           Monitorização Ambiental

@@ -6,7 +6,6 @@ import Box from '@mui/material/Box';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { styled } from '@mui/material/styles';
 
-// Custom props interface matching the original SensorChart
 export interface FrontSensorChartProps {
   title: string;
   value: string;
@@ -22,7 +21,6 @@ export interface FrontSensorChartProps {
   maxValue?: number;
 }
 
-// Hardcoded styled components to match admin theme
 const FrontSensorCard = styled(Card)({
   borderRadius: '8px',
   padding: '16px',
@@ -48,7 +46,6 @@ const FrontSensorCard = styled(Card)({
   },
 });
 
-// Chart gradient definition
 function AreaGradient({ color, id }: { color: string; id: string }) {
   return (
     <defs>
@@ -60,7 +57,6 @@ function AreaGradient({ color, id }: { color: string; id: string }) {
   );
 }
 
-// Custom Chip with hardcoded styling to match admin theme
 const StyledChip = styled(Chip)(({ color = 'default' }) => {
   const colors = {
     success: {
@@ -128,19 +124,67 @@ export default function FrontSensorChart({
   const gradientId = `${title.toLowerCase().replace(/\s+/g, '-')}-gradient-${Math.random().toString(36).substring(2, 9)}`;
   
   const formatTimeLabel = (label: string) => {
-    const seconds = parseInt(label.replace('s', '')) + 1;
-    if (seconds % 60 === 0) {
-      return `${Math.floor(seconds / 60)}m`;
-    }
-    if (seconds < 60) {
+    const seconds = parseInt(label.replace('s', ''));
+    if (seconds >= 3600) {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      if (minutes === 0 && secs === 0) return `${hours}h`;
+      if (secs === 0) return `${hours}h ${minutes}m`;
+      return `${hours}h ${minutes}m ${secs}s`;
+    } else if (seconds >= 60) {
+      const minutes = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      if (secs === 0) return `${minutes}m`;
+      return `${minutes}m ${secs}s`;
+    } else {
       return `${seconds}s`;
     }
-    else {
-      const min = Math.floor(seconds / 60);
-      const sec = seconds % 60;
-      return `${min}m ${sec}s`;
-    }
   };
+
+  const getTickInterval = () => {
+    if (timeLabels.length === 0) return 30;
+    
+    const allSeconds = timeLabels.map(label => parseInt(label.replace('s', '')));
+    const maxSeconds = Math.max(...allSeconds);
+    
+    if (maxSeconds <= 60) return 10;
+    if (maxSeconds <= 300) return 30;
+    if (maxSeconds <= 900) return 60;
+    if (maxSeconds <= 3600) return 300;
+    return 600;
+  };
+
+  const tickIntervalSeconds = getTickInterval();
+
+  const getCustomTicks = () => {
+    if (timeLabels.length === 0) return [];
+    
+    const allSeconds = timeLabels.map(label => parseInt(label.replace('s', '')));
+    const maxSeconds = Math.max(...allSeconds);
+    const minSeconds = Math.min(...allSeconds);
+    
+    const ticks = [];
+    for (let i = minSeconds; i <= maxSeconds; i += tickIntervalSeconds) {
+      const closestIndex = timeLabels.findIndex(label => {
+        const seconds = parseInt(label.replace('s', ''));
+        return Math.abs(seconds - i) <= tickIntervalSeconds / 2;
+      });
+      
+      if (closestIndex !== -1) {
+        ticks.push(closestIndex);
+      }
+    }
+    
+    const lastIndex = timeLabels.length - 1;
+    if (lastIndex > 0 && !ticks.includes(lastIndex)) {
+      ticks.push(lastIndex);
+    }
+    
+    return ticks;
+  };
+
+  const customTickIndices = getCustomTicks();
 
   return (
     <FrontSensorCard>
@@ -174,8 +218,8 @@ export default function FrontSensorChart({
           <LineChart
             xAxis={[{
               data: timeLabels,
-              scaleType: 'band',
-              tickInterval: (_, i) => (i + 1) % 30 === 0,
+              scaleType: 'point',
+              tickInterval: (_, i) => customTickIndices.includes(i),
               valueFormatter: formatTimeLabel
             }]}
             yAxis={[{
@@ -193,7 +237,7 @@ export default function FrontSensorChart({
               }
             ]}
             height={170}
-            margin={{ left: 40, right: 10, top: 10, bottom: 30 }}
+            margin={{ left: 40, right: 20, top: 10, bottom: 30 }}
             grid={{ 
               horizontal: true,
               vertical: false 

@@ -45,6 +45,8 @@ interface Mission {
 const MissionsContent = () => {
     const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [awaitingConnectionOpen, setAwaitingConnectionOpen] = useState(false);
+    const [awaitingMissionId, setAwaitingMissionId] = useState<number | null>(null);
     const { enqueueSnackbar } = useSnackbar();
     const navigate = useNavigate();
 
@@ -151,6 +153,51 @@ const MissionsContent = () => {
         }
     }
 
+    const checkMissionConnection = async (missionId: number) => {
+        try {
+            const response = await fetch(`${API_URL}/mission/${missionId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                const mission = data.mission;
+                if (mission.start_date) {
+                    const recordsResponse = await fetch(`${API_URL}/mission/${missionId}/records`);
+                    const recordsData = await recordsResponse.json();
+                    
+                    if (recordsData.success && recordsData.records.length > 0) {
+                        setAwaitingConnectionOpen(false);
+                        setAwaitingMissionId(null);
+                        navigate(`/admin/missions/${missionId}`, { replace: true });
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (error) {
+            console.error('Error checking mission connection:', error);
+            return false;
+        }
+    };
+
+    useEffect(() => {
+        let intervalId: NodeJS.Timeout;
+        
+        if (awaitingConnectionOpen && awaitingMissionId) {
+            intervalId = setInterval(async () => {
+                const connected = await checkMissionConnection(awaitingMissionId);
+                if (connected) {
+                    clearInterval(intervalId);
+                }
+            }, 1000);
+        }
+        
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [awaitingConnectionOpen, awaitingMissionId]);
+
     const handleSave = async () => {
         if (!currentMission.name?.trim()) {
             enqueueSnackbar('O nome da missão é obrigatório.', { variant: 'error' });
@@ -159,7 +206,7 @@ const MissionsContent = () => {
 
         const newMission = {
             name: currentMission.name,
-            start_date: missionType === 'realtime' ? dayjs().toISOString() : null,
+            start_date: null,
             end_date: null,
             duration: null,
             is_realtime: missionType === 'realtime'
@@ -174,12 +221,16 @@ const MissionsContent = () => {
             const data = await response.json();
 
             if (data.success) {
-                setDialogOpen(false);
-                enqueueSnackbar('Missão criada com sucesso!', { variant: 'success' });
                 const insertedMission = data.missions[data.missions.length - 1];
+                
                 if (missionType === 'realtime') {
-                    navigate(`/admin/missions/${insertedMission.id}`, { replace: true });
+                    setDialogOpen(false);
+                    setAwaitingMissionId(insertedMission.id);
+                    setAwaitingConnectionOpen(true);
+                    enqueueSnackbar('', { variant: 'info' });
                 } else {
+                    setDialogOpen(false);
+                    enqueueSnackbar('Missão criada com sucesso!', { variant: 'success' });
                     fetchMissions();
                 }
             } else {
@@ -190,6 +241,12 @@ const MissionsContent = () => {
             console.error('Erro ao criar a missão:', err);
             enqueueSnackbar('Erro de conexão ao criar a missão.', { variant: 'error' });
         }
+    };
+
+    const handleCancelAwaiting = () => {
+        setAwaitingConnectionOpen(false);
+        setAwaitingMissionId(null);
+        fetchMissions();
     };
 
     const handleImportMission = (id: number) => {
@@ -775,6 +832,86 @@ const MissionsContent = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <Dialog
+                open={awaitingConnectionOpen}
+                maxWidth="sm"
+                fullWidth
+                disableEscapeKeyDown
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        backgroundImage: 'none',
+                        overflow: 'hidden',
+                        boxShadow: 'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
+                    },
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        px: 4,
+                        py: 3,
+                        fontSize: '1.5rem',
+                        fontWeight: 600,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        textAlign: 'center',
+                    }}
+                >
+                    Missão em Tempo Real
+                </DialogTitle>
+                <DialogContent sx={{ px: 4, py: 6 }}>
+                    <Box 
+                        sx={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center',
+                            gap: 3
+                        }}
+                    >
+                        <CircularProgress size={60} thickness={4} />
+                        <Typography 
+                            variant="h6" 
+                            component="div" 
+                            sx={{ textAlign: 'center', color: 'text.secondary' }}
+                        >
+                            A aguardar ligação...
+                        </Typography>
+                        <Typography 
+                            variant="body2" 
+                            component="div" 
+                            sx={{ textAlign: 'center', color: 'text.disabled', maxWidth: '300px' }}
+                        >
+                            Assim que a ligação for estabelecida, a missão irá iniciar e será redirecionado para a respetiva página.
+                        </Typography>
+                    </Box>
+                </DialogContent>
+                <DialogActions
+                    sx={{
+                        px: 4,
+                        py: 3,
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Button
+                        onClick={handleCancelAwaiting}
+                        variant="outlined"
+                        color="error"
+                        sx={{
+                            px: 3,
+                            py: 1,
+                            borderRadius: 1,
+                            textTransform: 'none',
+                            fontWeight: 'normal',
+                        }}
+                    >
+                        Cancelar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             <input 
                 type="file"
                 accept=".csv,.xlsx"
