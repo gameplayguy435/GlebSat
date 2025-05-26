@@ -359,10 +359,12 @@ const NewsContent = () => {
                                 <CardMedia
                                     component="img"
                                     height="200"
+                                    sx={{ objectFit: 'cover', maxHeight: '200px' }}
                                     image={newsArticle.main_image
                                         ? `../backend${newsArticle.main_image}`
                                         : '../backend/media/images/glebsat-front.png'
                                     }
+                                    alt={newsArticle.title || 'Imagem da notícia'}
                                 />
                                 <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
                                     <CardContent sx={{ flexGrow: 1 }}>
@@ -437,7 +439,6 @@ const NewsContent = () => {
             </>
             )}
             
-            {/* Edit/Create Dialog */}
             <Dialog 
                 open={dialogOpen} 
                 onClose={handleDialogClose} 
@@ -485,51 +486,6 @@ const NewsContent = () => {
                                     placeholder="Título da notícia"
                                     variant="outlined"
                                     value={currentNewsArticle?.title || ''}
-                                    onChange={handleInputChange}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 1,
-                                        }
-                                    }}
-                                />
-                            </FormControl>
-                            
-                            <FormControl>
-                                <FormLabel 
-                                    htmlFor="published_date"
-                                    sx={{ 
-                                        mb: 1, 
-                                        fontWeight: 500,
-                                        fontSize: '0.875rem'
-                                    }}
-                                >
-                                    Data de Publicação
-                                </FormLabel>
-                                <CustomDatePicker onChange={handleDateChange} value={currentNewsArticle?.published_date ? dayjs(currentNewsArticle.published_date) : null}/>
-                            </FormControl>
-                            
-                            <FormControl>
-                                <FormLabel 
-                                    htmlFor="summary"
-                                    sx={{ 
-                                        mb: 1, 
-                                        fontWeight: 500,
-                                        fontSize: '0.875rem'
-                                    }}
-                                >
-                                    Resumo
-                                </FormLabel>
-                                <TextField
-                                    id="summary"
-                                    type="text"
-                                    name="summary"
-                                    placeholder="Breve descrição da notícia"
-                                    fullWidth
-                                    multiline
-                                    minRows={2}
-                                    maxRows={4}
-                                    variant="outlined"
-                                    value={currentNewsArticle?.summary || ''}
                                     onChange={handleInputChange}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {

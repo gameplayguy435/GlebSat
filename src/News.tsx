@@ -270,10 +270,10 @@ const NewsPage = () => {
                       height="200"
                       image={newsArticle.main_image 
                         ? `../backend${newsArticle.main_image}` 
-                        : "/images/placeholder.jpg"}
+                        : "../backend/media/images/glebsat-front.png"}
                       alt={newsArticle.title}
                       className="image-overlay"
-                      sx={{ objectFit: 'cover' }}
+                      sx={{ objectFit: 'cover', maxHeight: '300px' }}
                     />
                     
                     <CardContent sx={{ flexGrow: 1, p: 3 }}>

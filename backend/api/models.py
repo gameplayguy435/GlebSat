@@ -20,7 +20,7 @@ class NewsArticle(models.Model):
     title = models.CharField(max_length=100)
     summary = models.CharField(max_length=200, null=True, blank=True)
     content = models.TextField()
-    published_date = models.DateTimeField(default=timezone.now)
+    published_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     active = models.BooleanField(default=True)
     pinned = models.BooleanField(default=False)

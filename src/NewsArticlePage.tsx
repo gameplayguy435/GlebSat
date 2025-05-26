@@ -68,7 +68,29 @@ const NewsArticlePage = () => {
             image: img.image.startsWith('../../backend') ? img.image : '../../backend' + img.image,
           }));
           
-          setImages(articleImages);
+          if (articleImages.length === 0) {
+            const defaultImage = {
+              id: -1,
+              name: 'Capa GlebsSat',
+              image: '../../backend/media/images/glebsat-front.png',
+              category: null,
+              news_article: parseInt(id as string),
+              active: true
+            };
+            setImages([defaultImage]);
+          } else {
+            setImages(articleImages);
+          }
+        } else {
+          const defaultImage = {
+            id: -1,
+            name: 'Capa GlebsSat',
+            image: '../../backend/media/images/glebsat-front.png',
+            category: null,
+            news_article: parseInt(id as string),
+            active: true
+          };
+          setImages([defaultImage]);
         }
       } catch (error) {
         console.error('Error fetching news article:', error);
@@ -175,76 +197,75 @@ const NewsArticlePage = () => {
             </Typography>
           </Box>
 
-          {images.length > 0 && (
-            <Box sx={{ mb: 6, position: 'relative' }}>
-              <Carousel
-                autoPlay={true}
-                animation="slide"
-                interval={6000}
-                timeout={500}
-                stopAutoPlayOnHover={false}
-                navButtonsAlwaysVisible={false}
-                navButtonsProps={{
-                  style: {
-                    backgroundColor: 'var(--background-primary, #fcfcfc)',
-                    color: 'var(--text-primary, #0b0e14)',
-                    borderRadius: '50%',
-                    padding: '8px',
-                    opacity: 0.85
-                  }
-                }}
-                navButtonsWrapperProps={{
-                  style: {
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    position: 'absolute'
-                  }
-                }}
-                indicatorContainerProps={{
-                  style: {
-                    marginTop: 8,
-                    textAlign: 'center'
-                  }
-                }}
-                indicatorIconButtonProps={{
-                  style: {
-                    padding: 3,
-                    color: 'rgba(100,100,100,0.2)',
-                  }
-                }}
-                activeIndicatorIconButtonProps={{
-                  style: {
-                    color: 'var(--accent-color, #1976d2)'
-                  }
-                }}
-                onChange={(now) => setCurrentImageIndex(now)}
-              >
-                {images.map((image, index) => (
-                  <Card 
-                    key={index}
+          <Box sx={{ mb: 6, position: 'relative' }}>
+            <Carousel
+              autoPlay={images.length > 1}
+              animation="slide"
+              interval={6000}
+              timeout={500}
+              stopAutoPlayOnHover={false}
+              navButtonsAlwaysVisible={images.length > 1}
+              navButtonsProps={{
+                style: {
+                  backgroundColor: 'var(--background-primary, #fcfcfc)',
+                  color: 'var(--text-primary, #0b0e14)',
+                  borderRadius: '50%',
+                  padding: '8px',
+                  opacity: 0.85
+                }
+              }}
+              navButtonsWrapperProps={{
+                style: {
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  position: 'absolute'
+                }
+              }}
+              indicatorContainerProps={{
+                style: {
+                  marginTop: 8,
+                  textAlign: 'center',
+                  display: images.length > 1 ? 'block' : 'none'
+                }
+              }}
+              indicatorIconButtonProps={{
+                style: {
+                  padding: 3,
+                  color: 'rgba(100,100,100,0.2)',
+                }
+              }}
+              activeIndicatorIconButtonProps={{
+                style: {
+                  color: 'var(--accent-color, #1976d2)'
+                }
+              }}
+              onChange={(now) => setCurrentImageIndex(now)}
+            >
+              {images.map((image, index) => (
+                <Card 
+                  key={index}
+                  sx={{ 
+                    borderRadius: 2, 
+                    overflow: 'hidden',
+                    boxShadow: 0
+                  }}
+                >
+                  <CardMedia
+                    component="img"
+                    height="500"
+                    image={image.image}
+                    alt={image.name || article.title}
                     sx={{ 
-                      borderRadius: 2, 
-                      overflow: 'hidden',
-                      boxShadow: 0
+                      objectFit: 'contain', 
+                      bgcolor: 'var(--background-primary)',
+                      maxHeight: { xs: '350px', sm: '400px', md: '500px' },
+                      width: '100%'
                     }}
-                  >
-                    <CardMedia
-                      component="img"
-                      height="500"
-                      image={image.image}
-                      alt={image.name || article.title}
-                      sx={{ 
-                        objectFit: 'contain', 
-                        bgcolor: 'var(--background-primary)',
-                        maxHeight: { xs: '350px', sm: '400px', md: '500px' },
-                        width: '100%'
-                      }}
-                    />
-                  </Card>
-                ))}
-              </Carousel>
-            </Box>
-          )}
+                  />
+                </Card>
+              ))}
+            </Carousel>
+          </Box>
           
             <Paper 
               elevation={0} 

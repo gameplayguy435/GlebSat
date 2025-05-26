@@ -31,6 +31,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import L from 'leaflet';
 import SensorChart from './components/SensorChart';
 import { demoSensorData, demoTrajectoryData } from './internals/data/sensorData';
+import { SnackbarProvider, useSnackbar } from 'notistack';
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
@@ -53,9 +54,10 @@ const fixLeafletIcon = () => {
   });
 };
 
-export default function ViewMissions() {
+const ViewMissionsContent = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
   const { missionId } = useParams();
   const [loading, setLoading] = useState(true);
   const [mission, setMission] = useState(null);
@@ -65,6 +67,7 @@ export default function ViewMissions() {
   const [isLive, setIsLive] = useState(true);
   const [finishDialogOpen, setFinishDialogOpen] = useState(false);
   const [finishingMission, setFinishingMission] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
     fixLeafletIcon();
@@ -141,8 +144,9 @@ export default function ViewMissions() {
     
     const recordTime = new Date(timestamp.replace(' ', 'T'));
     const startTime = new Date(missionStartDate);
-    
-    return Math.floor((recordTime.getTime() - startTime.getTime()) / 1000);
+
+    const timeDiff = Math.floor((recordTime.getTime() - startTime.getTime()) / 1000)
+    return Math.max(timeDiff, 0);
   };
 
   const processSensorData = (records, missionStartDate) => {
@@ -338,22 +342,25 @@ export default function ViewMissions() {
   };
 
   const formatDuration = (duration) => {
-    if (!duration) return 'Dados indisponíveis';
+    if (!duration && !isLive) return 'Dados indisponíveis';
     
     try {
-      if (mission?.start_date && !mission?.end_date) {
+      if (mission?.start_date && !mission?.end_date && isLive) {
         const start = new Date(mission.start_date);
-        const now = new Date();
+        const now = new Date(currentTime);
         const diffSeconds = Math.floor((now - start) / 1000);
-        const minutes = Math.floor(diffSeconds / 60);
-        const seconds = diffSeconds % 60;
         
-        if (minutes === 0) {
-          return `${seconds} seg`;
-        } else if (seconds === 0) {
-          return `${minutes} min`;
+        if (diffSeconds < 60) {
+          return `${diffSeconds} seg`;
         } else {
-          return `${minutes} min ${seconds} seg`;
+          const minutes = Math.floor(diffSeconds / 60);
+          const seconds = diffSeconds % 60;
+          
+          if (seconds === 0) {
+            return `${minutes} min`;
+          } else {
+            return `${minutes} min ${seconds} seg`;
+          }
         }
       }
       
@@ -401,14 +408,14 @@ export default function ViewMissions() {
         setMission(result.mission);
         setIsLive(false);
         setFinishDialogOpen(false);
-        // enqueueSnackbar
-        enqueueSnackbar();
-        console.log('Missão terminada com sucesso!');
+        enqueueSnackbar('Missão terminada com sucesso!', { variant: 'success' });
       } else {
+        enqueueSnackbar('Erro ao terminar a missão.', { variant: 'error' });
         console.error('Erro ao terminar missão:', result.message);
         setError(result.message);
       }
     } catch (err) {
+      enqueueSnackbar('Erro ao terminar a missão.', { variant: 'error' });
       console.error('Error finishing mission:', err);
       setError('Erro ao terminar a missão');
     } finally {
@@ -423,12 +430,15 @@ export default function ViewMissions() {
   useEffect(() => {
     if (isLive && mission?.start_date) {
       const interval = setInterval(() => {
-        setMission(prev => ({...prev}));
-      }, 5000);
+        setMission(prev => ({
+          ...prev,
+        }));
+        setCurrentTime(Date.now());
+      }, 1000);
       
       return () => clearInterval(interval);
     }
-  }, [isLive, mission]);
+  }, [isLive, mission?.start_date]);
 
   const getMapCenter = () => {
     if (trajectoryData.length > 0) {
@@ -557,7 +567,7 @@ export default function ViewMissions() {
                     '100%': { opacity: 1 }
                   }
                 }}>
-                  {formatDuration(mission.duration)} (em tempo real)
+                  {formatDuration(null)} (em tempo real)
                 </Box>
               ) : formatDuration(mission.duration)}
             </Typography>
@@ -593,7 +603,7 @@ export default function ViewMissions() {
                     />
                     <Marker position={trajectoryData[trajectoryData.length - 1]}>
                       <Popup>
-                        Posição Atual <br/>
+                        Posição {isLive ? "Atual" : "Final"}<br/>
                         Latitude: {trajectoryData[trajectoryData.length - 1][0].toFixed(6)} <br/>
                         Longitude: {trajectoryData[trajectoryData.length - 1][1].toFixed(6)} <br/>
                         Altitude: {sensorData.altitude.current} {sensorData.altitude.unit}
@@ -767,3 +777,21 @@ export default function ViewMissions() {
     </Box>
   );
 }
+
+const ViewMissions = () => {
+  return (
+      <SnackbarProvider
+        maxSnack={3}
+        autoHideDuration={3000}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        preventDuplicate
+      >
+        <ViewMissionsContent />
+      </SnackbarProvider>
+  );
+}
+
+export default ViewMissions;

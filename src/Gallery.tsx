@@ -29,7 +29,6 @@ const GalleryPage = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [galleryByCategory, setGalleryByCategory] = useState<{[key: string]: any[]}>({});
 
-  // Fetch categories and images from backend
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -51,7 +50,6 @@ const GalleryPage = () => {
         const data = await response.json();
         
         if (data.success) {
-          // Format image URLs properly
           const activeImages = data.images
             .filter((img: GalleryImage) => img.active)
             .map((img: GalleryImage) => ({
@@ -73,7 +71,6 @@ const GalleryPage = () => {
     fetchImages();
   }, []);
 
-  // Organize images by category when either images or categories change
   useEffect(() => {
     if (categories.length > 0 && images.length > 0) {
       const organizedGallery: {[key: string]: any[]} = {};
@@ -96,7 +93,6 @@ const GalleryPage = () => {
     }
   }, [categories, images]);
 
-  // Image Modal Component
   const ImageModal = ({ image, onClose }) => {
     if (!image) return null;
     
@@ -129,9 +125,11 @@ const GalleryPage = () => {
             transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
             style={{
               position: 'relative',
-              maxWidth: '90%',
-              maxHeight: '90%',
-              overflow: 'hidden',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               borderRadius: 16
             }}
           >
@@ -151,20 +149,27 @@ const GalleryPage = () => {
               <Close />
             </IconButton>
             
-            <Box sx={{ 
-              width: '100%', 
-              maxWidth: '1200px',
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               borderRadius: 3,
               overflow: 'hidden',
-              boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.3)'
+              boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.5)',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              maxWidth: '90vw',
+              maxHeight: '90vh'
             }}>
               <Box
                 component="img"
                 src={image.url}
                 alt={image.title}
                 sx={{
-                  width: '100%',
+                  maxWidth: '100%',
+                  maxHeight: '90vh',
+                  width: 'auto',
                   height: 'auto',
+                  objectFit: 'contain',
                   display: 'block'
                 }}
               />
@@ -175,7 +180,6 @@ const GalleryPage = () => {
     );
   };
 
-  // Gallery Section Component
   const GallerySection = ({ title, images }) => (
     <Box
       component={motion.div}
@@ -227,7 +231,7 @@ const GalleryPage = () => {
               <Box 
                 sx={{ 
                   position: 'relative',
-                  paddingTop: '75%', // 4:3 aspect ratio
+                  paddingTop: '75%',
                   overflow: 'hidden'
                 }}
               >
@@ -362,7 +366,6 @@ const GalleryPage = () => {
         )}
       </Container>
 
-      {/* Modal for enlarged image view */}
       <ImageModal 
         image={selectedImage} 
         onClose={() => setSelectedImage(null)} 

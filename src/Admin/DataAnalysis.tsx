@@ -122,7 +122,7 @@ export default function DataAnalysis() {
     const recordTime = new Date(timestamp);
     const startTime = new Date(missionStartDate);
     
-    return Math.floor((recordTime.getTime() - startTime.getTime()) / 1000);
+    return Math.max(Math.floor((recordTime.getTime() - startTime.getTime()) / 1000), 0);
   };
 
   const processAllMissionsData = (missionsWithData, colors) => {

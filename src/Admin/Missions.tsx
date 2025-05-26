@@ -227,7 +227,7 @@ const MissionsContent = () => {
                     setDialogOpen(false);
                     setAwaitingMissionId(insertedMission.id);
                     setAwaitingConnectionOpen(true);
-                    enqueueSnackbar('', { variant: 'info' });
+                    enqueueSnackbar('A missão iniciará em breve!', { variant: 'info' });
                 } else {
                     setDialogOpen(false);
                     enqueueSnackbar('Missão criada com sucesso!', { variant: 'success' });
@@ -860,13 +860,14 @@ const MissionsContent = () => {
                 >
                     Missão em Tempo Real
                 </DialogTitle>
-                <DialogContent sx={{ px: 4, py: 6 }}>
+                <DialogContent sx={{ px: 4, py: 0 }}>
                     <Box 
                         sx={{ 
                             display: 'flex', 
                             flexDirection: 'column', 
                             alignItems: 'center',
-                            gap: 3
+                            gap: 3,
+                            my: 4
                         }}
                     >
                         <CircularProgress size={60} thickness={4} />

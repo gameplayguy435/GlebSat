@@ -116,7 +116,7 @@ const HomePage = () => {
     const recordTime = new Date(timestamp);
     const startTime = new Date(missionStartDate);
     
-    return Math.floor((recordTime.getTime() - startTime.getTime()) / 1000);
+    return Math.max(Math.floor((recordTime.getTime() - startTime.getTime()) / 1000), 0);
   };
 
   const processSensorData = (records, missionStartDate) => {
@@ -165,15 +165,12 @@ const HomePage = () => {
       unit: "ppm"
     };
     
-    // Extract timestamps and trajectory data
     const timeLabels = [];
     const trajectoryData = [];
     
-    // Process each record
     records.forEach((record) => {
       const data = record.data;
       
-      // Extract timestamp for labels
       if (data.timestamp && missionStartDate) {
         const timeDiff = calculateTimeDifference(data.timestamp, missionStartDate);
         timeLabels.push(`${timeDiff}s`);
@@ -233,7 +230,6 @@ const HomePage = () => {
       }
     });
     
-    // Calculate trends for each sensor
     const calculateTrend = (series) => {
       if (series.length < 2) return { trend: 'neutral', trendLabel: '0%' };
       
@@ -297,6 +293,13 @@ const HomePage = () => {
       behavior: 'smooth',
       block: 'start'
     });
+  };
+
+  const getMapCenter = () => {
+    if (trajectoryData.length > 0) {
+      return trajectoryData[trajectoryData.length - 1];
+    }
+    return [41.0644, -8.5762];
   };
 
   return (
@@ -580,7 +583,8 @@ const HomePage = () => {
             >
                 <Box sx={{ height: '100%' }}>
                   <MapContainer 
-                    center={trajectoryData.length > 0 ? trajectoryData[0] : [41.0644, -8.5761559]} 
+                    key={`map-${trajectoryData.length}`}
+                    center={getMapCenter()} 
                     zoom={15} 
                     style={{ height: '100%', width: '100%', borderRadius: 0 }}
                   >

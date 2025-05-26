@@ -151,22 +151,17 @@ class PasswordResetView(APIView):
             )
 
         try:
-            # Verificar se o utilizador existe
             user = User.objects.get(email=email, name=name)
             
-            # Gerar token de redefinição único (válido por 1 hora)
             token = secrets.token_urlsafe(32)
             expiry = datetime.datetime.now() + datetime.timedelta(hours=1)
             
-            # Armazenar temporariamente o token (pode ser melhorado com um modelo dedicado)
             user.reset_token = token
             user.reset_token_expiry = expiry
             user.save()
             
-            # Construir link de redefinição
             reset_link = f"{URL}/admin/reset-password?token={token}&email={email}"
             
-            # Enviar email com o link
             email_message = EmailMessage(
                 subject='Redefinição de Palavra-Passe GlebSat',
                 body=f"""
@@ -197,7 +192,6 @@ Equipa GlebSat
             )
             
         except User.DoesNotExist:
-            # Por segurança, não revelar se o utilizador existe ou não
             return Response(
                 {
                     'success': False,
@@ -231,7 +225,6 @@ class VerifyResetTokenView(APIView):
         try:
             user = User.objects.get(email=email, reset_token=token)
             
-            # Verificar se o token ainda é válido
             if not user.reset_token_expiry or user.reset_token_expiry < timezone.now():
                 return Response(
                     {
@@ -296,7 +289,6 @@ class CompleteResetPasswordView(APIView):
         try:
             user = User.objects.get(email=email, reset_token=token)
             
-            # Verificar se o token ainda é válido
             if not user.reset_token_expiry or user.reset_token_expiry < timezone.now():
                 return Response(
                     {
@@ -306,7 +298,6 @@ class CompleteResetPasswordView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             
-            # Atualizar a palavra-passe
             user.password = make_password(password=password, salt=SALT)
             user.reset_token = None
             user.reset_token_expiry = None
@@ -706,12 +697,10 @@ class UpdateMissionView(APIView):
         try:
             mission = Mission.objects.get(id=mission_id)
             
-            # Update specific fields
             if 'end_date' in request.data:
                 mission.end_date = request.data['end_date']
             
             if 'duration' in request.data:
-                # For duration, convert string format to timedelta
                 duration_str = request.data['duration']
                 if duration_str:
                     hours, minutes, seconds = map(int, duration_str.split(':'))
@@ -807,7 +796,6 @@ class ImportMissionRecordsView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
                             
-            # Sort records by timestamp if available
             if 'data' in records_data[0] and 'timestamp' in records_data[0]['data']:
                 sorted_records = sorted(
                     records_data, 
@@ -834,11 +822,9 @@ class ImportMissionRecordsView(APIView):
                         except:
                             pass
                 
-                # For import missions, set the start_date if it's NULL
                 if mission.start_date is None and first_timestamp:
                     mission.start_date = first_timestamp
                     
-                # Set end_date and calculate duration
                 if last_timestamp:
                     mission.end_date = last_timestamp
                     
@@ -848,7 +834,6 @@ class ImportMissionRecordsView(APIView):
                 
                 mission.save()
             
-            # Import records
             imported_count = 0
             for record_item in records_data:
                 Record.objects.create(
@@ -905,6 +890,7 @@ class AddMissionRecordView(APIView):
                 return Response(
                     {
                         'success': False,
+                        'finished': False,
                         'message': 'No data provided'
                     },
                     status=status.HTTP_400_BAD_REQUEST,
@@ -918,6 +904,7 @@ class AddMissionRecordView(APIView):
             return Response(
                 {
                     'success': True,
+                    'finished': False,
                     'message': 'Record added successfully',
                     'record_id': record.id
                 },
@@ -928,6 +915,7 @@ class AddMissionRecordView(APIView):
             return Response(
                 {
                     'success': False,
+                    'finished': False,
                     'message': 'Mission not found'
                 },
                 status=status.HTTP_404_NOT_FOUND,
@@ -936,6 +924,7 @@ class AddMissionRecordView(APIView):
             return Response(
                 {
                     'success': False,
+                    'finished': False,
                     'message': f'Error adding record: {str(e)}'
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1031,6 +1020,11 @@ class FinishMissionView(APIView):
             
             if mission.start_date:
                 duration = last_timestamp - mission.start_date
+                total_seconds = int(duration.total_seconds())
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                seconds = total_seconds % 60
+                duration = datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds)
                 mission.duration = duration
             
             mission.save()
@@ -1056,7 +1050,7 @@ class FinishMissionView(APIView):
             return Response(
                 {
                     'success': False,
-                    'message': f'Erro ao finalizar missão: {str(e)}'
+                    'message': f'Erro ao terminar missão: {str(e)}'
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
