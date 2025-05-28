@@ -8,17 +8,14 @@ import "./assets/styles/App.css";
 import FrontLayout from './FrontLayout';
 import AboutUsPage from "./AboutUs";
 import ContactsPage from "./Contacts";
-// import DocumentationPage from "./Documentation"; Probably not needed
 import GalleryPage from "./Gallery";
 import HomePage from "./Home";
 import NewsPage from "./News";
 import NewsArticlePage from './NewsArticlePage';
-// Back-End Dashboard
 import Dashboard from './Admin/Dashboard';
 import SignIn from './Admin/authentication/SignIn';
 import ResetPassword from './Admin/authentication/components/ResetPassword';
 // import SignUp from './Admin/authentication/SignUp'; Disabled Creating Account
-import MainGrid from './Admin/MainGrid';
 import ManageContent from './Admin/ManageContent';
 import Missions from './Admin/Missions';
 import ViewMissions from './Admin/ViewMissions';
@@ -46,7 +43,6 @@ function App() {
 		<GoogleReCaptchaProvider reCaptchaKey="6Lf3Jg0rAAAAAMgpee2NImqOTeyO6a7ZxE6RnQPC">
 			<Router>
 				<Routes>
-					{/* Admin/Back-End Routes */}
 					<Route path="/admin/login" element={
 						<SignIn	/>
 					} />
@@ -62,7 +58,6 @@ function App() {
 						<Route path="missions/:missionId" element={<ViewMissions />} />
 					</Route>
 					
-					{/* Front-End Routes */}
 					<Route element={<FrontLayout />}>
 						<Route path="/" element={<HomePage />} />
 						<Route path="/about" element={<AboutUsPage />} />

@@ -186,59 +186,64 @@ export default function DataAnalysis() {
           timePoints.push(`${timeDiff}s`);
         }
         
-        if (data.temperature_c !== undefined) {
-          const tempValue = Number(data.temperature_c);
-          if (!isNaN(tempValue) && isFinite(tempValue)) {
-            tempData.push(tempValue);
-            sensorData.temperature.min = Math.min(sensorData.temperature.min, tempValue);
-            sensorData.temperature.max = Math.max(sensorData.temperature.max, tempValue);
+          if (data.temperature_c !== undefined) {
+            const tempValue = Number(data.temperature_c);
+            if (!isNaN(tempValue) && isFinite(tempValue)) {
+              tempData.push(tempValue);
+              sensorData.temperature.min = Math.min(sensorData.temperature.min, tempValue);
+              sensorData.temperature.max = Math.max(sensorData.temperature.max, tempValue);
+            }
           }
-        }
-        
-        if (data.pressure_hpa !== undefined) {
-          const pressureValue = Number(data.pressure_hpa);
-          if (!isNaN(pressureValue) && isFinite(pressureValue)) {
-            pressureData.push(pressureValue);
-            sensorData.pressure.min = Math.min(sensorData.pressure.min, pressureValue);
-            sensorData.pressure.max = Math.max(sensorData.pressure.max, pressureValue);
+          
+          if (data.pressure_hpa !== undefined) {
+            const pressureValue = Number(data.pressure_hpa);
+            if (!isNaN(pressureValue) && isFinite(pressureValue)) {
+              pressureData.push(pressureValue);
+              sensorData.pressure.min = Math.min(sensorData.pressure.min, pressureValue);
+              sensorData.pressure.max = Math.max(sensorData.pressure.max, pressureValue);
+            }
           }
-        }
-        
-        if (data.humidity_percent !== undefined) {
-          const humidityValue = Number(data.humidity_percent);
-          if (!isNaN(humidityValue) && isFinite(humidityValue)) {
-            humidityData.push(humidityValue);
-            sensorData.humidity.min = Math.min(sensorData.humidity.min, humidityValue);
-            sensorData.humidity.max = Math.max(sensorData.humidity.max, humidityValue);
+          
+          if (data.humidity_percent !== undefined) {
+            const humidityValue = Number(data.humidity_percent);
+            if (!isNaN(humidityValue) && isFinite(humidityValue)) {
+              humidityData.push(humidityValue);
+              sensorData.humidity.min = Math.min(sensorData.humidity.min, humidityValue);
+              sensorData.humidity.max = Math.max(sensorData.humidity.max, humidityValue);
+            }
           }
-        }
-        
-        if (data.altitude_m !== undefined) {
-          const altitudeValue = Number(data.altitude_m);
-          if (!isNaN(altitudeValue) && isFinite(altitudeValue)) {
-            altitudeData.push(altitudeValue);
-            sensorData.altitude.min = Math.min(sensorData.altitude.min, altitudeValue);
-            sensorData.altitude.max = Math.max(sensorData.altitude.max, altitudeValue);
+          
+          if (data.altitude_m !== undefined) {
+            const altitudeValue = Number(data.altitude_m);
+            if (!isNaN(altitudeValue) && isFinite(altitudeValue)) {
+              altitudeData.push(altitudeValue);
+              sensorData.altitude.min = Math.min(sensorData.altitude.min, altitudeValue);
+              sensorData.altitude.max = Math.max(sensorData.altitude.max, altitudeValue);
+            }
           }
-        }
-        
-        if (data.co2_ppm !== undefined) {
-          const co2Value = Number(data.co2_ppm);
-          if (!isNaN(co2Value) && isFinite(co2Value)) {
-            co2Data.push(co2Value);
-            sensorData.co2.min = Math.min(sensorData.co2.min, co2Value);
-            sensorData.co2.max = Math.max(sensorData.co2.max, co2Value);
+          
+          if (data.co2_ppm !== undefined) {
+            const co2Value = Number(data.co2_ppm);
+            if (!isNaN(co2Value) && isFinite(co2Value)) {
+              co2Data.push(co2Value);
+              sensorData.co2.min = Math.min(sensorData.co2.min, co2Value);
+              sensorData.co2.max = Math.max(sensorData.co2.max, co2Value);
+            }
           }
-        }
-        
-        if (data.latitude !== undefined && data.longitude !== undefined) {
-          const latitude = Number(data.latitude);
-          const longitude = Number(data.longitude);
-          if (!isNaN(latitude) && !isNaN(longitude)) {
-            trajectoryPoints.push([latitude, longitude]);
+          
+          if (data.latitude !== undefined && data.longitude !== undefined) {
+            const latitude = Number(data.latitude);
+            const longitude = Number(data.longitude);
+            if (!isNaN(latitude) && !isNaN(longitude) && 
+                latitude !== 0.0 && longitude !== 0.0) {
+              trajectoryPoints.push([latitude, longitude]);
+            }
           }
-        }
       });
+
+      if (trajectoryPoints.length === 0) {
+        trajectoryPoints.push([41.0644, -8.5762]);
+      }
       
       if (timePoints.length > maxTimePoints) {
         maxTimePoints = timePoints.length;
@@ -496,7 +501,7 @@ export default function DataAnalysis() {
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
               <MultiSensorChart 
-                title="Temperatura"
+                title="Temperatura (ºC)"
                 unit={sensorsData.temperature.unit}
                 seriesData={sensorsData.temperature.series}
                 timeLabels={sensorsData.timeLabels.length > 0 ? sensorsData.timeLabels : ['0s']}
@@ -508,7 +513,7 @@ export default function DataAnalysis() {
             
             <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
               <MultiSensorChart 
-                title="Pressão"
+                title="Pressão (hPa)"
                 unit={sensorsData.pressure.unit}
                 seriesData={sensorsData.pressure.series}
                 timeLabels={sensorsData.timeLabels.length > 0 ? sensorsData.timeLabels : ['0s']}
@@ -520,7 +525,7 @@ export default function DataAnalysis() {
             
             <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
               <MultiSensorChart 
-                title="Humidade"
+                title="Humidade (%)"
                 unit={sensorsData.humidity.unit}
                 seriesData={sensorsData.humidity.series}
                 timeLabels={sensorsData.timeLabels.length > 0 ? sensorsData.timeLabels : ['0s']}
@@ -532,7 +537,7 @@ export default function DataAnalysis() {
             
             <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
               <MultiSensorChart 
-                title="Altitude"
+                title="Altitude (m)"
                 unit={sensorsData.altitude.unit}
                 seriesData={sensorsData.altitude.series}
                 timeLabels={sensorsData.timeLabels.length > 0 ? sensorsData.timeLabels : ['0s']}
@@ -544,7 +549,7 @@ export default function DataAnalysis() {
             
             <Grid size={{ xs: 12, lg: 6, xl: 4 }}>
               <MultiSensorChart 
-                title="Níveis de CO₂"
+                title="Níveis de CO₂ (ppm)"
                 unit={sensorsData.co2.unit}
                 seriesData={sensorsData.co2.series}
                 timeLabels={sensorsData.timeLabels.length > 0 ? sensorsData.timeLabels : ['0s']}

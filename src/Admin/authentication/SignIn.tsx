@@ -20,7 +20,6 @@ import {
 import { styled } from '@mui/material/styles';
 import { SatelliteAltRounded } from '@mui/icons-material';
 import ForgotPassword from './components/ForgotPassword';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
 import AppTheme from '../assets/shared-theme/AppTheme';
 import ThemeToggle from '../../components/ThemeToggle';
 import { SnackbarProvider, useSnackbar } from 'notistack';
@@ -286,35 +285,6 @@ const SignInContent = (props: any) => {
               Esqueceu-se da sua palavra-passe?
             </Link>
           </Box>
-          {/* <Divider>ou</Divider>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Entre com o Google')}
-              startIcon={<GoogleIcon />}
-            >
-              Entre com o Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Entre com o Facebook')}
-              startIcon={<FacebookIcon />}
-            >
-              Entre com o Facebook
-            </Button>
-            <Typography sx={{ textAlign: 'center' }}>
-              Ainda não criou uma conta?{' '}
-              <Link
-                href="/admin/signup"
-                variant="body2"
-                sx={{ alignSelf: 'center' }}
-              >
-                Registe-se
-              </Link>
-            </Typography>
-          </Box> */}
         </Card>
         <ForgotPassword open={open} handleClose={handleClose} />
       </SignInContainer>

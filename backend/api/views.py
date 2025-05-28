@@ -932,6 +932,7 @@ class AddMissionRecordView(APIView):
             
 class GetCurrentMissionView(APIView):
     def post(self, request, format=None):
+        current_time = timezone.now() + timezone.timedelta(hours=1)
         try:
             current_mission = Mission.objects.filter(
                 start_date__isnull=True,
@@ -941,7 +942,7 @@ class GetCurrentMissionView(APIView):
             if current_mission:
                 current_mission.start_date = timezone.now()
                 current_mission.save()
-                current_time = timezone.now() + timezone.timedelta(hours=1)
+                
                 return Response(
                     {
                         'success': True,
@@ -954,7 +955,8 @@ class GetCurrentMissionView(APIView):
             return Response(
                 {
                     'success': False,
-                    'message': 'No active mission found'
+                    'message': 'No active mission found',
+                    'timestamp': current_time
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
@@ -962,7 +964,8 @@ class GetCurrentMissionView(APIView):
             return Response(
                 {
                     'success': False,
-                    'message': 'No active mission found'
+                    'message': 'No active mission found',
+                    'timestamp': current_time
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
@@ -970,7 +973,8 @@ class GetCurrentMissionView(APIView):
             return Response(
                 {
                     'success': False,
-                    'message': f'Error fetching current mission: {str(e)}'
+                    'message': f'Error fetching current mission: {str(e)}',
+                    'timestamp': current_time
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

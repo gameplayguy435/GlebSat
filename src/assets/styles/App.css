@@ -69,12 +69,10 @@ nav a:hover {
   color: var(--text-secondary) !important;
 }
 
-/* Additional Home Page Styling */
 .leaflet-container {
   border-radius: 8px;
 }
 
-/* Gradient overlay for images */
 .image-overlay {
   position: relative;
 }
@@ -123,7 +121,6 @@ nav a:hover {
   transition: all 0.3s ease;
 }
 
-/* Improve tooltip appearance */
 .recharts-tooltip-wrapper {
   border-radius: 8px;
   overflow: hidden;
@@ -137,7 +134,6 @@ nav a:hover {
   padding: 12px !important;
 }
 
-/* Hero section with theme-aware background */
 .hero-section {
   background: linear-gradient(135deg, var(--background-tertiary) 0%, var(--background-secondary) 100%);
   color: var(--text-primary);
@@ -149,33 +145,27 @@ nav a:hover {
   }
 }
 
-/* Countdown container with theme-aware background */
 .countdown-container {
   background-color: rgb(from var(--background-primary) r g b / 0.4);
 }
 
-/* Theme-aware countdown digit papers */
 .countdown-digit {
   background-color: rgb(from var(--background-tertiary) r g b / 0.1);
 }
 
-/* Style for accent icons */
 .accent-icon {
   color: var(--accent-color, #1E88E5);
 }
 
-/* Theme-aware chart cards */
 .chart-card, .map-card {
   background-color: var(--background-secondary);
 }
 
-/* Theme-aware chart grid lines */
 .chart-grid line {
   stroke: var(--text-secondary);
   opacity: 0.2;
 }
 
-/* Hero button with theme colors */
 .hero-button {
   background-color: var(--accent-color, #1976D2);
   color: var(--text-primary);

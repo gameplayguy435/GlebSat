@@ -250,7 +250,6 @@ const HomePage = () => {
       };
     };
     
-    // Set current values and trends
     temperature.current = temperature.series.length > 0 ? temperature.series[temperature.series.length - 1].toFixed(1).replace('.', ',') : '0';
     const tempTrend = calculateTrend(temperature.series);
     temperature.trend = tempTrend.trend;
@@ -276,7 +275,6 @@ const HomePage = () => {
     co2.trend = co2Trend.trend;
     co2.trendLabel = co2Trend.trendLabel;
     
-    // Return the processed sensor data
     return {
       timeLabels,
       temperature,

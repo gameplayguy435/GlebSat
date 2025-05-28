@@ -17,8 +17,6 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AppTheme from '../assets/shared-theme/AppTheme';
-// import ColorModeSelect from '../assets/shared-theme/ColorModeSelect';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
 import ThemeToggle from '../../components/ThemeToggle';
 import { SatelliteAltRounded } from '@mui/icons-material';
 
@@ -269,22 +267,6 @@ const SignUp = (props: any) => {
             <Typography sx={{ color: 'text.secondary' }}>ou</Typography>
           </Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Registe-se com o Google')}
-              startIcon={<GoogleIcon />}
-            >
-              Registe-se com o Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Registe-se com o Facebook')}
-              startIcon={<FacebookIcon />}
-            >
-              Registe-se com o Facebook
-            </Button> */}
             <Typography sx={{ textAlign: 'center' }}>
               Já tem uma conta?{' '}
               <Link

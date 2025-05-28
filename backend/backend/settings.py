@@ -131,7 +131,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
-ALLOWED_HOSTS = ['192.168.1.27', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['192.168.1.26', '127.0.0.1', 'localhost', '172.16.5.133']
 
 CORS_ALLOWED_CREDENTIALS = True
 

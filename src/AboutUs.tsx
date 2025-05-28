@@ -48,7 +48,6 @@ const AboutUsPage = () => {
 
   return (
     <Box sx={{ minHeight: '100vh' }} className="about-container">
-      {/* Page Title - Outside Container for Full Width */}
       <Box 
         component={motion.div}
         initial={{ opacity: 0, y: -30 }}
@@ -70,7 +69,6 @@ const AboutUsPage = () => {
       </Box>
 
       <Container maxWidth="xl" sx={{ mb: 8 }}>
-        {/* Video Presentation Section */}
         <Box 
           component={motion.div}
           initial={{ opacity: 0, y: 50 }}
@@ -97,7 +95,7 @@ const AboutUsPage = () => {
               borderRadius: 4, 
               overflow: 'hidden',
               position: 'relative',
-              paddingTop: '56.25%', // Maintain 16:9 aspect ratio
+              paddingTop: '56.25%',
               width: '100%'
             }}
             className="bg-secondary"
@@ -124,7 +122,6 @@ const AboutUsPage = () => {
         </Box>
       </Container>
 
-      {/* Project Motivation Section - Full Width Hero-Style Layout */}
       <Box 
         component={motion.div}
         initial={{ opacity: 0 }}
@@ -140,7 +137,6 @@ const AboutUsPage = () => {
         }}
         className="bg-tertiary"
       >
-        {/* Decorative elements */}
         <Box 
           component={motion.div}
           animate={{ 
@@ -234,7 +230,6 @@ const AboutUsPage = () => {
               </Box>
             </Grid>
             
-            {/* Right side: Image */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Box
                 component={motion.div}
@@ -269,7 +264,6 @@ const AboutUsPage = () => {
       </Box>
       
       <Container maxWidth="xl">
-        {/* Team Members Section */}
         <Box 
           component={motion.div}
           initial={{ opacity: 0 }}
@@ -389,7 +383,6 @@ const AboutUsPage = () => {
           </Grid>
         </Box>
         
-        {/* Mission & Values Section */}
         <Box 
           component={motion.div}
           initial={{ opacity: 0 }}
@@ -495,7 +488,6 @@ const AboutUsPage = () => {
           </Grid>
         </Box>
         
-        {/* Project Timeline Section */}
         <Box 
           component={motion.div}
           initial={{ opacity: 0 }}
@@ -548,16 +540,15 @@ const AboutUsPage = () => {
                 sx={{
                   display: 'flex',
                   justifyContent: { 
-                    xs: 'flex-start', // Always start from left on mobile
-                    md: index % 2 === 0 ? 'flex-end' : 'flex-start' // Alternate on desktop
+                    xs: 'flex-start',
+                    md: index % 2 === 0 ? 'flex-end' : 'flex-start'
                   },
                   mb: 6,
                   position: 'relative',
-                  ml: { xs: 4, md: 0 }, // Add margin-left on mobile to accommodate the timeline
-                  pl: { xs: 2, md: 0 } // Add padding-left on mobile
+                  ml: { xs: 4, md: 0 },
+                  pl: { xs: 2, md: 0 }
                 }}
               >
-                {/* Timeline node/circle */}
                 <Box
                   sx={{
                     display: { xs: 'block', md: 'none' },
@@ -597,7 +588,7 @@ const AboutUsPage = () => {
                         backgroundColor: 'primary.main',
                         transform: 'rotate(45deg)',
                         zIndex: -1,
-                        display: { xs: 'none', md: 'block' } // Hide on mobile
+                        display: { xs: 'none', md: 'block' }
                       }
                     }}
                   >

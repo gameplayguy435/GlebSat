@@ -3,36 +3,28 @@
     Chris Bongers - https://dev.to/chrisbongers/how-to-build-a-dark-mode-toggle-with-react-and-styled-components-2e18
 */
 :root {
-    /** sunny side **/
     --day-background: #C2E9F6;
     --day-border: #72cce3;
     --day-color: #96dcee;
     --yellow-background: #fffaa8;
     --yellow-border: #f5eb71;
-    /** dark side **/
     --night-background: #05070a;
     --night-border: #1E293B;
     --night-color: #333b4d;
     --gray-border: #e8e8ea;
     --gray-dots: #e8e8ea;
-    /** general **/
     --white: #fff;
 }
 
 .toggle--checkbox {
     display: none;
 }
-/** This will all flip from sun to moon **/
-/** Change the label color **/
 .toggle--checkbox:checked ~ .background {
     background: var(--night-background);
 }
 .toggle--checkbox:checked + .toggle--label {
     background: var(--night-color);
     border-color: var(--night-border);
-    /** Change the cloud to stars **/
-    /** Change the sun into the moon **/
-    /** Show the dimples on the moon **/
 }
 .toggle--checkbox:checked + .toggle--label .toggle--label-background {
     left: 17px;
@@ -61,7 +53,6 @@
     opacity: 1;
 }
 .toggle--label {
-    /** Placeholder element, starting at day **/
     width: 70px;
     height: 35px;
     background: var(--day-color);
@@ -70,9 +61,6 @@
     display: flex;
     position: relative;
     transition: all 350ms ease-in;
-    /** The sun cloud and moon stars **/
-    /** Sun/Moon element **/
-    /** Gray dots on the moon **/
 }
 .toggle--label-background {
     width: 8px;

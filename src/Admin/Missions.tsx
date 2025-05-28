@@ -271,12 +271,10 @@ const MissionsContent = () => {
             if (result.success && result.records && result.records.length > 0) {
                 const recordsData = result.records.map(record => record.data);
                 
-                // Convert to worksheet
                 const worksheet = utils.json_to_sheet(recordsData);
                 const workbook = utils.book_new();
                 utils.book_append_sheet(workbook, worksheet, "Records");
                 
-                // Generate and download the file
                 const mission = missions.find(m => m.id === id);
                 const fileName = `missao_${mission?.name.replace(/\s+/g, '_').toLowerCase() || 'export'}_${new Date().toISOString().split('T')[0]}.xlsx`;
                 
@@ -312,7 +310,6 @@ const MissionsContent = () => {
           const result = await response.json();
           
           if (result.success && result.records && result.records.length > 0) {
-            // Get mission details
             const missionResponse = await fetch(`${API_URL}/mission/${id}`);
             const missionData = await missionResponse.json();
             
@@ -367,15 +364,13 @@ const MissionsContent = () => {
                 try {
                     let data = [];
                     
-                    if (file.name.endsWith('.csv')) {
-                        // Parse CSV
+                    if (file.name.endsWith('.csv') || file.name.endsWith('.CSV')) {
                         const text = e.target?.result as string;
                         const lines = text.split('\n');
                         const headers = lines[0].split(',').map(h => h.trim());
                         
-                        // Skip header row (first line)
                         for (let i = 1; i < lines.length; i++) {
-                            if (!lines[i].trim()) continue; // Skip empty lines
+                            if (!lines[i].trim()) continue;
                             
                             const values = lines[i].split(',').map(v => v.trim());
                             const record = {};
@@ -390,8 +385,7 @@ const MissionsContent = () => {
                             
                             data.push(record);
                         }
-                    } else if (file.name.endsWith('.xlsx')) {
-                        // Parse XLSX
+                    } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.XLSX')) {
                         const buffer = e.target?.result;
                         const workbook = read(buffer, { type: 'array' });
                         const sheetName = workbook.SheetNames[0];
@@ -404,7 +398,6 @@ const MissionsContent = () => {
                         throw new Error('Apenas ficheiros CSV e XLSX são suportados.');
                     }
                     
-                    // Send data to backend
                     if (data.length > 0) {                        
                         const payload = data.map(record => ({
                             mission_id: missionId,
@@ -445,7 +438,6 @@ const MissionsContent = () => {
                     });
                 } finally {
                     setLoading(false);
-                    // Clear the file input
                     event.target.value = '';
                 }
             };
@@ -455,8 +447,7 @@ const MissionsContent = () => {
                 enqueueSnackbar('Erro ao ler o ficheiro.', { variant: 'error' });
             };
             
-            // Read the file
-            if (file.name.endsWith('.csv')) {
+            if (file.name.endsWith('.csv') || file.name.endsWith('.CSV')) {
                 reader.readAsText(file);
             } else {
                 reader.readAsArrayBuffer(file);
@@ -469,7 +460,6 @@ const MissionsContent = () => {
     };
 
     const processDataForReport = (records, mission) => {
-        // Calculate statistics for each sensor
         const stats = {
             temperature: calculateStats(records.map(r => r.temperature_c)),
             pressure: calculateStats(records.map(r => r.pressure_hpa)),
@@ -685,6 +675,7 @@ const MissionsContent = () => {
                     borderRadius: 1,
                     boxShadow: 1,
                     width: '100%',
+                    mb: 4,
                     '& .MuiDataGrid-main': { width: '100%' },
                     '& .MuiDataGrid-columnHeaders': { minHeight: '48px' },
                     '& .MuiDataGrid-cell': { minHeight: '48px' },

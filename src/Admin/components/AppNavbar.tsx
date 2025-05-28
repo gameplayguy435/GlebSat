@@ -69,7 +69,6 @@ export default function AppNavbar() {
               GlebSat
             </Typography>
           </Stack>
-          {/* <ColorModeIconDropdown /> */}
           <MenuButton aria-label="menu" onClick={toggleDrawer(true)}>
             <MenuRoundedIcon />
           </MenuButton>

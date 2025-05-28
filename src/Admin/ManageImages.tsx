@@ -344,7 +344,6 @@ const ImagesContent = () => {
                 </Button>
             </Box>
             
-            {/* Group images by category */}
             {images.length === 0 ? (
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12 }}>
@@ -364,7 +363,6 @@ const ImagesContent = () => {
                     </Grid>
                 </Grid>
             ) : (
-                // Map through categories and display images for each
                 categories.map(category => {
                     const categoryImages = images.filter(image => image.category === category.id);
                     if (categoryImages.length === 0) return null;
@@ -427,7 +425,6 @@ const ImagesContent = () => {
                                                     }}
                                                 />
                                                 
-                                                {/* Overlay with actions */}
                                                 <Box 
                                                     component={motion.div}
                                                     initial={{ opacity: 0 }}
@@ -459,7 +456,6 @@ const ImagesContent = () => {
                                                         </Typography>
                                                     </Box>
                                                     
-                                                    {/* Fixed action buttons */}
                                                     <Box 
                                                         sx={{ 
                                                             display: 'flex', 
@@ -524,7 +520,6 @@ const ImagesContent = () => {
                 })
             )}
             
-            {/* Edit/Create Dialog */}
             <Dialog 
                 open={dialogOpen} 
                 onClose={handleDialogClose} 
@@ -677,7 +672,6 @@ const ImagesContent = () => {
                                     </Button>
                                 </Box>
                                 
-                                {/* Image preview */}
                                 {imagePreview && (
                                     <Box 
                                         sx={{ 

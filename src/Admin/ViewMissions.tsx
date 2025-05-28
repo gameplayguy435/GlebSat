@@ -256,9 +256,14 @@ const ViewMissionsContent = () => {
       if (data.latitude !== undefined && data.longitude !== undefined) {
         const latitude = Number(data.latitude);
         const longitude = Number(data.longitude);
-        if (!isNaN(latitude) && !isNaN(longitude)) {
+        
+        if (!isNaN(latitude) && !isNaN(longitude) && 
+            latitude !== 0.0 && longitude !== 0.0) {
           trajectoryData.push([latitude, longitude]);
         }
+      }
+      if (trajectoryData.length == 0) {
+        trajectoryData.push([41.0644, -8.5762]);
       }
     });
     

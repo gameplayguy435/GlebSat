@@ -31,7 +31,6 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
   const validateInputs = (email: string, fullname: string) => {
     let isValid = true;
 
-    // Validar email
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setDialogEmailError(true);
       setDialogEmailErrorMessage('Insira um email válido.');
@@ -41,7 +40,6 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
       setDialogEmailErrorMessage('');
     }
 
-    // Validar nome
     if (!fullname || fullname.trim().length < 3) {
       setDialogNameError(true);
       setDialogNameErrorMessage('Insira um nome completo válido.');
@@ -67,7 +65,6 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
     setIsSubmitting(true);
 
     try {
-      // Validar reCAPTCHA
       const recaptchaToken = await validateReCaptcha('reset_password');
       if (!recaptchaToken) {
         enqueueSnackbar('Erro ao validar reCAPTCHA.', { variant: 'error' });
@@ -75,7 +72,6 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
         return;
       }
 
-      // Enviar pedido de redefinição ao servidor
       const response = await fetch(`${API_URL}/reset-password`, {
         method: 'POST',
         headers: {

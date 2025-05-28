@@ -3,7 +3,6 @@ import Stack from '@mui/material/Stack';
 import CustomDatePicker from './CustomDatePicker';
 import NavbarBreadcrumbs from './NavbarBreadcrumbs';
 import ThemeToggle from '../../components/ThemeToggle';
-// import ColorModeIconDropdown from '../assets/shared-theme/ColorModeIconDropdown';
 import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
 import { Box, Chip, Icon, Typography } from '@mui/material';
 import dayjs, { Dayjs } from 'dayjs';

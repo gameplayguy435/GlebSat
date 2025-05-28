@@ -9,7 +9,6 @@ const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Close menu when navigating
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location]);

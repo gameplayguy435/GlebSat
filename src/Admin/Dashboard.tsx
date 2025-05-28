@@ -91,7 +91,6 @@ const Dashboard = (props:any) => {
       <Box sx={{ display: 'flex' }}>
         <SideMenu />
         <AppNavbar />
-        {/* Main content */}
         <Box
           component="main"
           sx={(theme) => ({
